@@ -32,7 +32,6 @@
     "@types/react": "~19.3.0",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~58.0.4",
-    "gh-pages": "^6.3.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -43,7 +42,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "predeploy": "expo export -p web && cp 'dist/post/[id].html' dist/404.html",
-    "deploy": "gh-pages --nojekyll -d dist"
+    "deploy": "sh scripts/deploy-web.sh"
   },
   "private": true
 }
