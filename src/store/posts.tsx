@@ -7,8 +7,11 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { Platform } from 'react-native';
 
 import type { CategoryId } from '@/constants/categories';
+import { importOldWebPosts } from '@/utils/import-old-web';
+import { makeId } from '@/utils/make-id';
 
 // 글의 본문은 "블록"을 차례로 쌓아서 만들어요.
 // - text: 보통 글 한 덩어리
@@ -29,9 +32,7 @@ export type Post = {
 // 폰 저장소에서 글 목록을 찾을 때 쓰는 이름표예요.
 const STORAGE_KEY = 'geulbang.posts.v1';
 
-export function makeId() {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
+export { makeId };
 
 export function isPostEmpty(post: Post) {
   return post.title.trim() === '' && post.blocks.every((block) => block.text.trim() === '');
@@ -57,7 +58,12 @@ export function PostsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((saved) => {
-        if (saved) setPosts(JSON.parse(saved));
+        if (saved) {
+          setPosts(JSON.parse(saved));
+        } else if (Platform.OS === 'web') {
+          // 처음 여는 웹이라면, 예전 웹 버전 글방에 써 둔 글이 있는지 찾아서 옮겨 와요.
+          setPosts(importOldWebPosts());
+        }
       })
       .catch((error) => console.warn('글을 불러오지 못했어요', error))
       .finally(() => setIsLoaded(true));

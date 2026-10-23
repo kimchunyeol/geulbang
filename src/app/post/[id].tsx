@@ -2,7 +2,6 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useHeaderHeight } from 'expo-router/react-navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -17,10 +16,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CheckBox } from '@/components/check-box';
+import { EditorInput, placeCursor } from '@/components/editor-input';
 import { findCategory } from '@/constants/categories';
 import { Fonts, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { isPostEmpty, makeId, usePosts, type Block } from '@/store/posts';
+import { confirmDelete } from '@/utils/confirm-delete';
 import { formatLongDate } from '@/utils/format-date';
 
 // 두 번 톡톡으로 볼 간격 (밀리초). 크게 하면 천천히 두 번 눌러도 알아채요.
@@ -47,6 +48,9 @@ export default function PostScreen() {
   const pendingFocus = useRef<{ id: string; cursorAt?: number } | null>(null);
   const lastFocusedId = useRef<string | null>(null);
   const lastTapAt = useRef(0);
+  // 웹(아이폰 사파리)에서는 손가락으로 누른 그 순간에 입력칸을 열어야 키보드가 올라와요.
+  // 그래서 두 번 톡톡 하자마자 이 보이지 않는 칸을 먼저 열고, 화면이 바뀐 뒤 진짜 칸으로 옮겨요.
+  const keyboardOpener = useRef<TextInputInstance>(null);
   const [isEditing, setIsEditing] = useState(false);
   // 이미 쓴 글은 읽기 모드로 열고, '쓰기' 버튼으로 만든 새 글은 바로 쓰기 모드로 열어요.
   const [isReading, setIsReading] = useState(isNew !== 'true');
@@ -59,8 +63,9 @@ export default function PostScreen() {
     if (!pendingFocus.current) return;
     const { id: blockId, cursorAt } = pendingFocus.current;
     const input = inputRefs.current.get(blockId);
-    input?.focus();
-    if (cursorAt !== undefined) input?.setSelection(cursorAt, cursorAt);
+    if (!input) return;
+    input.focus();
+    if (cursorAt !== undefined) placeCursor(input, cursorAt);
     pendingFocus.current = null;
   });
 
@@ -88,6 +93,7 @@ export default function PostScreen() {
     const now = currentTime();
     if (now - lastTapAt.current < DOUBLE_TAP_DELAY) {
       lastTapAt.current = 0;
+      keyboardOpener.current?.focus();
       const lastBlock = blocks[blocks.length - 1];
       setIsReading(false);
       focusLater(lastBlock.id, lastBlock.text.length);
@@ -153,17 +159,10 @@ export default function PostScreen() {
   }
 
   function handleDelete() {
-    Alert.alert('이 글을 지울까요?', '지운 글은 되돌릴 수 없어요.', [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '지우기',
-        style: 'destructive',
-        onPress: () => {
-          router.back();
-          deletePost(post!.id);
-        },
-      },
-    ]);
+    confirmDelete(() => {
+      router.back();
+      deletePost(post!.id);
+    });
   }
 
   function rememberInput(blockId: string) {
@@ -212,14 +211,13 @@ export default function PostScreen() {
                 <Text style={[styles.title, { color: colors.text }]}>{post.title}</Text>
               )
             ) : (
-              <TextInput
+              <EditorInput
                 value={post.title}
                 onChangeText={(title) => updatePost(post.id, { title })}
                 placeholder="제목"
                 placeholderTextColor={colors.border}
                 style={[styles.title, { color: colors.text }]}
-                multiline
-                submitBehavior="submit"
+                submitOnEnter
                 returnKeyType="next"
                 onSubmitEditing={() => inputRefs.current.get(blocks[0].id)?.focus()}
                 onFocus={() => setIsEditing(true)}
@@ -247,7 +245,7 @@ export default function PostScreen() {
                       {block.text}
                     </Text>
                   ) : (
-                    <TextInput
+                    <EditorInput
                       ref={rememberInput(block.id)}
                       value={block.text}
                       onChangeText={(text) => changeBlock(block.id, { text })}
@@ -259,8 +257,7 @@ export default function PostScreen() {
                         { color: block.checked ? colors.textSecondary : colors.text },
                         block.checked && styles.checkedText,
                       ]}
-                      multiline
-                      submitBehavior="submit"
+                      submitOnEnter
                       onSubmitEditing={() => handleCheckSubmit(index)}
                       onKeyPress={(event) => {
                         if (event.nativeEvent.key === 'Backspace') handleCheckBackspace(index);
@@ -277,7 +274,7 @@ export default function PostScreen() {
                   </Text>
                 )
               ) : (
-                <TextInput
+                <EditorInput
                   key={block.id}
                   ref={rememberInput(block.id)}
                   value={block.text}
@@ -285,9 +282,6 @@ export default function PostScreen() {
                   placeholder={index === 0 ? '여기에 글을 써 보세요' : ''}
                   placeholderTextColor={colors.border}
                   style={[styles.body, { color: colors.text }]}
-                  multiline
-                  scrollEnabled={false}
-                  textAlignVertical="top"
                   onFocus={() => handleFocus(block.id)}
                   onBlur={() => setIsEditing(false)}
                 />
@@ -305,6 +299,15 @@ export default function PostScreen() {
             />
           </Pressable>
         </ScrollView>
+
+        {Platform.OS === 'web' && (
+          <TextInput
+            ref={keyboardOpener}
+            style={styles.keyboardOpener}
+            aria-hidden
+            tabIndex={-1}
+          />
+        )}
 
         {isReading && (
           <Text
@@ -396,6 +399,15 @@ const styles = StyleSheet.create({
   },
   tapArea: {
     minHeight: 240,
+  },
+  keyboardOpener: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 1,
+    height: 1,
+    opacity: 0,
+    fontSize: 16, // 16보다 작으면 아이폰 사파리가 화면을 확대해요
   },
   readingHint: {
     textAlign: 'center',

@@ -1,11 +1,12 @@
 import { Link, router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { findCategory } from '@/constants/categories';
+import { CATEGORIES, findCategory } from '@/constants/categories';
 import { Fonts, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { usePosts, type Post } from '@/store/posts';
+import { confirmDelete } from '@/utils/confirm-delete';
 import { formatShortDate } from '@/utils/format-date';
 import {
   getChecklistProgress,
@@ -13,6 +14,11 @@ import {
   getPostTitle,
   postMatches,
 } from '@/utils/post-preview';
+
+// 웹으로 내보낼 때 카테고리 세 개의 목록 페이지를 미리 만들어 둬요.
+export function generateStaticParams() {
+  return CATEGORIES.map((category) => ({ id: category.id }));
+}
 
 // 글 목록 화면. 주소의 [id] 자리에 diary / memo / essay 가 들어와요.
 export default function CategoryScreen() {
@@ -37,10 +43,7 @@ export default function CategoryScreen() {
   }
 
   function handleLongPress(post: Post) {
-    Alert.alert('이 글을 지울까요?', '지운 글은 되돌릴 수 없어요.', [
-      { text: '취소', style: 'cancel' },
-      { text: '지우기', style: 'destructive', onPress: () => deletePost(post.id) },
-    ]);
+    confirmDelete(() => deletePost(post.id));
   }
 
   return (
