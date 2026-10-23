@@ -1,18 +1,32 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { Fonts } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { PostsProvider } from '@/store/posts';
 
-SplashScreen.preventAutoHideAsync();
+export default function RootLayout() {
+  const scheme = useColorScheme();
+  const colors = useTheme();
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
+    <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <PostsProvider>
+        <StatusBar style="auto" />
+        {/* 모든 화면에 공통으로 적용할 헤더 모양이에요. 그림자 없이 종이색으로 조용하게. */}
+        <Stack
+          screenOptions={{
+            headerStyle: { backgroundColor: colors.background },
+            headerShadowVisible: false,
+            headerTintColor: colors.text,
+            headerTitleStyle: { fontFamily: Fonts.serif, fontSize: 17 },
+            headerBackButtonDisplayMode: 'minimal',
+            contentStyle: { backgroundColor: colors.background },
+          }}>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+        </Stack>
+      </PostsProvider>
     </ThemeProvider>
   );
 }

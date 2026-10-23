@@ -1,6 +1,6 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://unistyl.es/), etc.
+ * 글방에서 쓰는 색과 글꼴, 간격을 한곳에 모아 둔 파일이에요.
+ * 여기 값만 바꾸면 앱 전체의 분위기가 함께 바뀌어요.
  */
 
 import '@/global.css';
@@ -9,50 +9,42 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    background: '#FAF8F4', // 종이처럼 살짝 따뜻한 흰색
+    surface: '#FFFFFF', // 카드 배경
+    text: '#2B2A28',
+    textSecondary: '#8A867F',
+    border: '#ECE8E0',
+    accent: '#8C7A63', // 버튼·체크 표시에 쓰는 차분한 갈색
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    background: '#1A1917',
+    surface: '#242320',
+    text: '#ECE8E1',
+    textSecondary: '#9A958C',
+    border: '#34322E',
+    accent: '#C2AE92',
   },
 } as const;
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export type ThemeColors = (typeof Colors)['light' | 'dark'];
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
+    /** 아이폰에 들어 있는 명조 계열 글꼴 */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
   },
   default: {
     sans: 'normal',
     serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
   },
   web: {
     sans: 'var(--font-display)',
     serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
   },
 });
 
 export const Spacing = {
-  half: 2,
   one: 4,
   two: 8,
   three: 16,
@@ -61,5 +53,4 @@ export const Spacing = {
   six: 64,
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+export const MaxContentWidth = 680;

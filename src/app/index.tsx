@@ -1,98 +1,120 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import { Link } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { CATEGORIES } from '@/constants/categories';
+import { Fonts, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
+import { usePosts } from '@/store/posts';
+import { formatLongDate } from '@/utils/format-date';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
-
+// 첫 화면: 일기·메모·수필 중 하나를 고르는 곳
 export default function HomeScreen() {
+  const colors = useTheme();
+  const { posts } = usePosts();
+  const [today] = useState(() => Date.now()); // 화면을 처음 열 때의 날짜
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text }]}>글방</Text>
+          <Text style={[styles.date, { color: colors.textSecondary }]}>
+            {formatLongDate(today)}
+          </Text>
+        </View>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+        <View style={styles.cards}>
+          {CATEGORIES.map((category) => {
+            const count = posts.filter((post) => post.category === category.id).length;
+            return (
+              <Link
+                key={category.id}
+                href={{ pathname: '/category/[id]', params: { id: category.id } }}
+                asChild>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.card,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                    pressed && styles.pressed,
+                  ]}>
+                  <View style={[styles.colorBar, { backgroundColor: category.color }]} />
+                  <View style={styles.cardText}>
+                    <Text style={[styles.cardName, { color: colors.text }]}>{category.name}</Text>
+                    <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+                      {category.description}
+                    </Text>
+                  </View>
+                  <Text style={[styles.count, { color: colors.textSecondary }]}>{count}</Text>
+                </Pressable>
+              </Link>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
   safeArea: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
+  content: {
+    width: '100%',
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
     paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    paddingBottom: Spacing.six,
+  },
+  header: {
+    paddingTop: Spacing.six,
+    paddingBottom: Spacing.five,
+    gap: Spacing.two,
   },
   title: {
-    textAlign: 'center',
+    fontFamily: Fonts.serif,
+    fontSize: 34,
+    letterSpacing: 2,
   },
-  code: {
-    textTransform: 'uppercase',
+  date: {
+    fontSize: 14,
   },
-  stepContainer: {
+  cards: {
     gap: Spacing.three,
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 14,
+    borderCurve: 'continuous',
+    overflow: 'hidden',
+    paddingRight: Spacing.four,
+  },
+  pressed: {
+    opacity: 0.6,
+  },
+  colorBar: {
+    width: 4,
     alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
+  },
+  cardText: {
+    flex: 1,
     paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+    paddingLeft: Spacing.four,
+    gap: Spacing.one,
+  },
+  cardName: {
+    fontFamily: Fonts.serif,
+    fontSize: 20,
+  },
+  cardDescription: {
+    fontSize: 14,
+  },
+  count: {
+    fontSize: 15,
+    fontVariant: ['tabular-nums'],
   },
 });
