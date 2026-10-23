@@ -33,20 +33,29 @@ export default function HomeScreen() {
                 key={category.id}
                 href={{ pathname: '/category/[id]', params: { id: category.id } }}
                 asChild>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.card,
-                    { backgroundColor: colors.surface, borderColor: colors.border },
-                    pressed && styles.pressed,
-                  ]}>
-                  <View style={[styles.colorBar, { backgroundColor: category.color }]} />
-                  <View style={styles.cardText}>
-                    <Text style={[styles.cardName, { color: colors.text }]}>{category.name}</Text>
-                    <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
-                      {category.description}
-                    </Text>
-                  </View>
-                  <Text style={[styles.count, { color: colors.textSecondary }]}>{count}</Text>
+                {/* Link asChild는 함수형 style을 넘기지 못하므로, 눌림 상태는 children에서 처리 */}
+                <Pressable>
+                  {({ pressed }) => (
+                    <View
+                      style={[
+                        styles.card,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                        pressed && styles.pressed,
+                      ]}>
+                      <View style={[styles.colorBar, { backgroundColor: category.color }]} />
+                      <View style={styles.cardText}>
+                        <Text style={[styles.cardName, { color: colors.text }]}>
+                          {category.name}
+                        </Text>
+                        <Text style={[styles.cardDescription, { color: colors.textSecondary }]}>
+                          {category.description}
+                        </Text>
+                        <Text style={[styles.count, { color: colors.textSecondary }]}>
+                          {count}편
+                        </Text>
+                      </View>
+                    </View>
+                  )}
                 </Pressable>
               </Link>
             );
@@ -69,6 +78,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.six,
   },
   header: {
+    alignItems: 'center',
     paddingTop: Spacing.six,
     paddingBottom: Spacing.five,
     gap: Spacing.two,
@@ -91,7 +101,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderCurve: 'continuous',
     overflow: 'hidden',
-    paddingRight: Spacing.four,
   },
   pressed: {
     opacity: 0.6,
@@ -102,8 +111,9 @@ const styles = StyleSheet.create({
   },
   cardText: {
     flex: 1,
+    alignItems: 'center',
     paddingVertical: Spacing.four,
-    paddingLeft: Spacing.four,
+    paddingHorizontal: Spacing.four,
     gap: Spacing.one,
   },
   cardName: {
@@ -112,6 +122,7 @@ const styles = StyleSheet.create({
   },
   cardDescription: {
     fontSize: 14,
+    textAlign: 'center',
   },
   count: {
     fontSize: 15,
