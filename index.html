@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12151c" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="글방">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>글방</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* Layout: a shelf of notebooks (categories) → inside one, a narrow index of writings beside a lined page; phones step through shelf → list → page */
+:root {
+  --paper: #f5f6f8;
+  --page: #ffffff;
+  --ink: #1d2433;
+  --ink-soft: #5b6475;
+  --line: #e2e6ee;
+  --rule: #d9e1f0;
+  --accent: #2f4fb3;
+  --accent-soft: #e8edfa;
+  --danger: #b4372f;
+  --c1: #2f4fb3; --c2: #2f7a5f; --c3: #8a4a9c; --c4: #b0662a; --c5: #3b7f99; --c6: #a53d5b;
+  --font-hand: "Nanum Pen Script", "Gowun Batang", cursive;
+  --font-write: "Gowun Batang", "Noto Serif KR", serif;
+  --font-ui: "IBM Plex Sans KR", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #12151c; --page: #1a1e27; --ink: #e6e9f0; --ink-soft: #99a1b3;
+    --line: #2a303d; --rule: #262c3a; --accent: #8fa8f2; --accent-soft: #242c45; --danger: #f08a80;
+    --c1: #8fa8f2; --c2: #7cc4a6; --c3: #c79ad6; --c4: #e3a56f; --c5: #82c3db; --c6: #e590a8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #12151c; --page: #1a1e27; --ink: #e6e9f0; --ink-soft: #99a1b3;
+  --line: #2a303d; --rule: #262c3a; --accent: #8fa8f2; --accent-soft: #242c45; --danger: #f08a80;
+  --c1: #8fa8f2; --c2: #7cc4a6; --c3: #c79ad6; --c4: #e3a56f; --c5: #82c3db; --c6: #e590a8;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+html { height: 100%; box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); -webkit-text-size-adjust: 100%; }
+*, *::before, *::after { box-sizing: inherit; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+.tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.tools .ghost { border: 1px solid var(--line); }
+.msg { font-size: 13px; color: var(--ink-soft); }
+.banner { background: var(--accent-soft); color: var(--ink); border-radius: 12px; padding: 12px 14px; font-size: 14px; line-height: 1.6; }
+.banner b { color: var(--accent); }
+.banner .btn { margin-top: 8px; padding: 8px 12px; font-size: 14px; }
+
+body { background: var(--paper); color: var(--ink); font-family: var(--font-ui); font-size: 15px; }
+button { font: inherit; color: inherit; }
+.btn { font-weight: 600; border: 0; border-radius: 10px; cursor: pointer; padding: 11px 14px; background: var(--accent); color: var(--page); }
+.ghost { background: none; border: 0; color: var(--ink-soft); cursor: pointer; padding: 6px 8px; border-radius: 8px; }
+.ghost:hover { background: var(--accent-soft); color: var(--ink); }
+.danger { color: var(--danger); }
+.btn-danger { background: var(--danger); padding: 6px 12px; font-size: 13px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap {
+  height: 100%; max-width: 1100px; margin: 0 auto; box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px;
+}
+.brand { font-family: var(--font-hand); font-weight: 400; font-size: 44px; line-height: 1; margin: 0; }
+.brand span { color: var(--accent); }
+.note { font-size: 12px; color: var(--ink-soft); line-height: 1.5; margin: 0; }
+
+/* ---------- shelf ---------- */
+.shelf { display: flex; flex-direction: column; gap: 20px; overflow-y: auto; height: 100%; }
+.shelf-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.books { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.book {
+  position: relative; text-align: left; cursor: pointer; border: 1px solid var(--line); background: var(--page);
+  border-radius: 6px 14px 14px 6px; padding: 18px 18px 16px 26px; min-height: 150px;
+  display: flex; flex-direction: column; gap: 6px; overflow: hidden;
+}
+.book::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 10px; background: var(--spine, var(--accent)); }
+.book:hover { border-color: var(--spine, var(--accent)); }
+.book .name { font-family: var(--font-write); font-weight: 700; font-size: 22px; word-break: break-all; }
+.book .sub { font-size: 13px; color: var(--ink-soft); }
+.book .last { margin-top: auto; font-size: 13px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.book-edit { display: flex; flex-direction: column; gap: 8px; }
+.book-edit input, .add-form input {
+  font: inherit; padding: 9px 11px; border-radius: 9px; border: 1px solid var(--line); background: var(--page); color: var(--ink); min-width: 0;
+}
+.row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.check { font-size: 13px; color: var(--ink-soft); display: flex; gap: 6px; align-items: center; }
+.add-card { border: 1.5px dashed var(--line); border-radius: 6px 14px 14px 6px; padding: 18px; min-height: 150px; display: flex; flex-direction: column; justify-content: center; gap: 10px; box-sizing: border-box; }
+.add-card .open-add { background: none; border: 0; cursor: pointer; color: var(--ink-soft); font-size: 15px; padding: 20px 0; }
+.add-card .open-add:hover { color: var(--accent); }
+.add-form { display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------- inside a notebook ---------- */
+.inside { height: 100%; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; }
+.index { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.crumbs { display: flex; align-items: center; gap: 4px; }
+.cat-title { font-family: var(--font-write); font-weight: 700; font-size: 26px; margin: 0; display: flex; align-items: center; gap: 10px; word-break: break-all; }
+.cat-title i { width: 8px; height: 26px; border-radius: 2px; background: var(--spine, var(--accent)); flex: none; }
+.count { font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.search { font: inherit; width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--page); color: var(--ink); }
+.list { list-style: none; margin: 0; padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; min-height: 0; }
+.entry { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px 8px; border-radius: 10px; cursor: pointer; background: transparent; border: 0; text-align: left; width: 100%; }
+.entry:hover { background: var(--accent-soft); }
+.entry[aria-current="true"] { background: var(--page); box-shadow: inset 0 0 0 1px var(--line); }
+.entry .day { text-align: center; line-height: 1.05; }
+.entry .day b { display: block; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.entry .day small { font-size: 11px; color: var(--ink-soft); }
+.entry .txt { min-width: 0; }
+.entry .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.entry .p { font-size: 13px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.month { font-size: 12px; font-weight: 600; color: var(--ink-soft); letter-spacing: 0.06em; padding: 12px 8px 4px; }
+.empty-list { color: var(--ink-soft); font-size: 14px; padding: 8px; line-height: 1.6; }
+
+.page { background: var(--page); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.page-head { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.back-list { display: none; }
+.date-label { font-family: var(--font-hand); font-size: 30px; line-height: 1; }
+.date-input { font: inherit; font-size: 13px; color: var(--ink-soft); border: 1px solid var(--line); background: var(--page); border-radius: 8px; padding: 4px 6px; }
+.spacer { flex: 1; }
+.status { font-size: 12px; color: var(--ink-soft); }
+.weather { display: flex; gap: 6px; padding: 12px 18px 0; flex-wrap: wrap; align-items: center; }
+.weather .lbl { font-size: 12px; color: var(--ink-soft); margin-right: 4px; }
+.weather button { font-size: 13px; padding: 5px 11px; border-radius: 999px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--ink-soft); }
+.weather button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--page); }
+.title-input { font-family: var(--font-write); font-weight: 700; font-size: 24px; border: 0; background: transparent; color: var(--ink); padding: 14px 18px 6px; width: 100%; box-sizing: border-box; }
+.title-input::placeholder, .body-input::placeholder { color: var(--ink-soft); opacity: 0.7; }
+.body-input {
+  flex: 1; min-height: 240px; resize: none; border: 0; color: var(--ink);
+  font-family: var(--font-write); font-size: 17px; line-height: 34px; padding: 3px 18px 18px;
+  background-color: transparent;
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 33px, var(--rule) 33px, var(--rule) 34px);
+  background-attachment: local; background-position: 0 3px;
+}
+.checks { display: flex; flex-direction: column; padding: 6px 18px 6px; }
+.ck { display: flex; align-items: center; gap: 10px; }
+.ck input[type="checkbox"] { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--accent); cursor: pointer; }
+.ck .ck-text { flex: 1; min-width: 0; font-family: var(--font-write); font-size: 17px; border: 0; border-bottom: 1px solid var(--rule); background: transparent; color: var(--ink); padding: 7px 0; }
+.ck.done .ck-text { text-decoration: line-through; color: var(--ink-soft); }
+.ck .x { font-size: 18px; line-height: 1; padding: 4px 8px; opacity: 0.6; }
+.ck .x:hover { opacity: 1; }
+.page-foot { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+.confirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+.blank { flex: 1; display: grid; place-items: center; color: var(--ink-soft); padding: 24px; text-align: center; line-height: 1.7; }
+
+@media (max-width: 720px) {
+  .inside { grid-template-columns: minmax(0, 1fr); }
+  .inside[data-sub="page"] .index { display: none; }
+  .inside[data-sub="list"] .page { display: none; }
+  .back-list { display: inline-block; }
+  .books { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .book, .add-card { min-height: 130px; padding-right: 12px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .entry, .weather button, .book { transition: background-color .15s, color .15s, border-color .15s; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="shelf" id="shelf">
+    <div class="banner" id="banner" role="note" hidden></div>
+    <div class="shelf-head">
+      <h1 class="brand">글방<span>.</span></h1>
+      <button class="ghost" id="editShelf" type="button">카테고리 편집</button>
+    </div>
+    <div class="books" id="books"></div>
+    <p class="note" id="saveNote"></p>
+    <div class="tools">
+      <button class="ghost" id="installBtn" type="button" hidden>휴대폰에 앱 설치</button>
+      <button class="ghost" id="shareBtn" type="button">친구에게 앱 공유</button>
+      <button class="ghost" id="exportBtn" type="button">백업 파일 만들기</button>
+      <button class="ghost" id="importBtn" type="button">백업 불러오기</button>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
+      <span class="msg" id="toolMsg" role="status"></span>
+    </div>
+  </section>
+
+  <section class="inside" id="inside" data-sub="list" hidden>
+    <aside class="index">
+      <div class="crumbs"><button class="ghost" id="toShelf" type="button">← 전체 카테고리</button></div>
+      <div class="row" style="justify-content: space-between;">
+        <h2 class="cat-title" id="catTitle"><i></i><span></span></h2>
+        <span class="count" id="count"></span>
+      </div>
+      <button class="btn" id="newBtn" type="button">+ 새 글 쓰기</button>
+      <input class="search" id="search" type="search" placeholder="이 카테고리에서 검색" aria-label="글 검색">
+      <ul class="list" id="list"></ul>
+    </aside>
+
+    <main class="page" id="page">
+      <div class="blank" id="blank">왼쪽 목록에서 글을 고르거나<br>"새 글 쓰기"를 눌러 시작하세요.</div>
+      <div id="editor" hidden style="display:contents">
+        <div class="page-head">
+          <button class="ghost back-list" id="backBtn" type="button">← 목록</button>
+          <span class="date-label" id="dateLabel"></span>
+          <input class="date-input" id="dateInput" type="date" aria-label="날짜 바꾸기">
+          <span class="spacer"></span>
+          <span class="status" id="status"></span>
+        </div>
+        <div class="weather" id="weather" role="group" aria-label="날씨"><span class="lbl">날씨</span></div>
+        <input class="title-input" id="titleInput" type="text" placeholder="제목" maxlength="80">
+        <div class="checks" id="checks" role="group" aria-label="체크 목록" hidden></div>
+        <textarea class="body-input" id="bodyInput" placeholder="생각나는 대로 적어보세요."></textarea>
+        <div class="page-foot">
+          <button class="ghost" id="addCheck" type="button">+ 체크 항목</button>
+          <span id="chars">0자</span>
+          <span class="spacer"></span>
+          <span id="delArea"></span>
+        </div>
+      </div>
+    </main>
+  </section>
+</div>
+
+<script>
+(() => {
+  const WEATHERS = ["맑음", "구름", "흐림", "비", "눈", "바람"];
+  const DOW = ["일", "월", "화", "수", "목", "금", "토"];
+  const COLORS = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6"];
+  const DEFAULT_CATS = [
+    { id: "diary", name: "일기", weather: true, color: 0 },
+    { id: "memo", name: "메모", weather: false, color: 1 },
+    { id: "essay", name: "수필", weather: false, color: 2 },
+  ];
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+
+  /* ---------- state ---------- */
+  let cats = DEFAULT_CATS.map((c) => ({ ...c }));
+  let entries = {};        // id -> {id, cat, date, title, body, weather, createdAt, updatedAt}
+  let catId = null;        // open notebook
+  let current = null;      // open entry id
+  let store = null;
+  let editing = false;     // shelf edit mode
+  let saveTimer = null, dirty = false, saving = Promise.resolve();
+
+  function todayKey() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function parse(k) { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); }
+  function longLabel(k) { const d = parse(k); return d.getFullYear() + "년 " + (d.getMonth() + 1) + "월 " + d.getDate() + "일 " + DOW[d.getDay()] + "요일"; }
+  function newId(p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function hasContent(e) { return !!e && !!(e.title.trim() || e.body.trim() || e.weather || (e.checks || []).some((c) => c.text.trim())); }
+  function checkSummary(e) { const cs = (e.checks || []).filter((c) => c.text.trim()); return cs.length ? "체크 " + cs.filter((c) => c.done).length + "/" + cs.length : ""; }
+  function catOf(id) { return cats.find((c) => c.id === id); }
+  function entriesIn(id) {
+    return Object.values(entries).filter((e) => e.cat === id && hasContent(e))
+      .sort((a, b) => (b.date.localeCompare(a.date)) || ((b.createdAt || 0) - (a.createdAt || 0)));
+  }
+  function normalize(v, id) {
+    // entries saved by the first version were keyed by date and had no category: they belong to 일기
+    return { id: v.id || id, cat: v.cat || "diary", date: v.date, title: v.title || "", body: v.body || "", weather: v.weather || "", checks: Array.isArray(v.checks) ? v.checks.map((c) => ({ text: String(c.text || ""), done: !!c.done })) : [], createdAt: v.createdAt || v.updatedAt || 0, updatedAt: v.updatedAt || 0 };
+  }
+
+  /* ---------- local fallback ---------- */
+  const LS = "pen-diary-v2", LS_OLD = "pen-diary-entries";
+  const local = {
+    load() {
+      try {
+        const v = JSON.parse(localStorage.getItem(LS) || "null");
+        if (v) { cats = v.cats || cats; Object.entries(v.entries || {}).forEach(([k, e]) => entries[k] = normalize(e, k)); return; }
+        const old = JSON.parse(localStorage.getItem(LS_OLD) || "{}");
+        Object.values(old).forEach((e) => { const n = normalize(e, "d-" + e.date); n.id = "d-" + e.date; entries[n.id] = n; });
+      } catch {}
+    },
+    write() { try { localStorage.setItem(LS, JSON.stringify({ cats, entries })); } catch {} },
+    async save() { local.write(); }, async remove() { local.write(); }, async saveCats() { local.write(); },
+  };
+
+  /* ---------- navigation ---------- */
+  function showShelf() {
+    flush(); catId = null; current = null;
+    $("inside").hidden = true; $("shelf").hidden = false; renderShelf();
+  }
+  function openCat(id) {
+    flush(); catId = id; current = null; editing = false;
+    $("search").value = "";
+    $("shelf").hidden = true; $("inside").hidden = false; $("inside").dataset.sub = "list";
+    const c = catOf(id);
+    $("inside").style.setProperty("--spine", "var(" + COLORS[c.color % COLORS.length] + ")");
+    $("catTitle").querySelector("span").textContent = c.name;
+    $("newBtn").textContent = c.weather ? "+ 오늘 " + c.name + " 쓰기" : "+ 새 글 쓰기";
+    $("search").placeholder = c.name + "에서 검색";
+    const first = entriesIn(id)[0];
+    if (first && !window.matchMedia("(max-width: 720px)").matches) current = first.id;
+    renderList(); renderPage();
+  }
+  function openEntry(id) {
+    flush(); dropEmpty(); current = id; $("inside").dataset.sub = "page";
+    renderList(); renderPage(); $("status").textContent = "";
+  }
+  function dropEmpty() { if (current && entries[current] && !hasContent(entries[current]) && !entries[current].updatedAt) delete entries[current]; }
+
+  /* ---------- shelf ---------- */
+  function renderShelf() {
+    const box = $("books"); box.textContent = "";
+    $("editShelf").textContent = editing ? "편집 끝내기" : "카테고리 편집";
+    cats.forEach((c, i) => {
+      const list = entriesIn(c.id);
+      const spine = "var(" + COLORS[c.color % COLORS.length] + ")";
+      if (!editing) {
+        const b = el("button", "book"); b.type = "button"; b.style.setProperty("--spine", spine);
+        b.append(el("span", "name", c.name), el("span", "sub", list.length ? "글 " + list.length + "편" : "아직 글이 없어요"));
+        if (list[0]) { const d = parse(list[0].date); b.append(el("span", "last", (d.getMonth() + 1) + "/" + d.getDate() + " · " + (list[0].title.trim() || list[0].body.trim().slice(0, 30) || "제목 없음"))); }
+        b.addEventListener("click", () => openCat(c.id));
+        box.appendChild(b);
+      } else {
+        const card = el("div", "book book-edit"); card.style.setProperty("--spine", spine); card.style.cursor = "default";
+        const inp = el("input"); inp.id = "cat-name-" + c.id; inp.value = c.name; inp.maxLength = 20; inp.setAttribute("aria-label", "카테고리 이름");
+        inp.addEventListener("change", () => { const v = inp.value.trim(); if (v && v !== c.name) { c.name = v; saveCats(); } else inp.value = c.name; });
+        const chk = el("label", "check"); const cb = el("input"); cb.type = "checkbox"; cb.checked = !!c.weather; cb.id = "cat-w-" + c.id;
+        cb.addEventListener("change", () => { c.weather = cb.checked; saveCats(); });
+        chk.append(cb, document.createTextNode("날씨 기록하기"));
+        const row = el("div", "row");
+        const color = el("button", "ghost", "색 바꾸기"); color.type = "button";
+        color.addEventListener("click", () => { c.color = (c.color + 1) % COLORS.length; saveCats(); renderShelf(); });
+        const up = el("button", "ghost", "앞으로"); up.type = "button"; up.disabled = i === 0;
+        up.addEventListener("click", () => { [cats[i - 1], cats[i]] = [cats[i], cats[i - 1]]; saveCats(); renderShelf(); });
+        const del = el("button", "ghost danger", "지우기"); del.type = "button";
+        del.addEventListener("click", () => {
+          row.textContent = "";
+          const cf = el("span", "confirm");
+          cf.append(el("span", null, list.length ? "글 " + list.length + "편도 함께 지워져요." : "지울까요?"));
+          const yes = el("button", "btn btn-danger", "지우기"); yes.type = "button";
+          const no = el("button", "ghost", "취소"); no.type = "button";
+          yes.addEventListener("click", async () => {
+            cats = cats.filter((x) => x.id !== c.id);
+            const gone = Object.values(entries).filter((e) => e.cat === c.id);
+            gone.forEach((e) => delete entries[e.id]);
+            renderShelf(); await saveCats();
+            for (const e of gone) { try { await store.remove(e.id); } catch {} }
+          });
+          no.addEventListener("click", renderShelf);
+          cf.append(yes, no); row.appendChild(cf); no.focus();
+        });
+        row.append(color, up, del);
+        card.append(inp, chk, el("span", "sub", "글 " + list.length + "편"), row);
+        box.appendChild(card);
+      }
+    });
+    // add new category
+    const add = el("div", "add-card");
+    const open = el("button", "open-add", "+ 새 카테고리 만들기"); open.type = "button";
+    open.addEventListener("click", () => {
+      add.textContent = "";
+      const f = el("form", "add-form");
+      const inp = el("input"); inp.id = "new-cat-name"; inp.placeholder = "이름 (예: 운행 기록)"; inp.maxLength = 20; inp.required = true; inp.setAttribute("aria-label", "새 카테고리 이름");
+      const chk = el("label", "check"); const cb = el("input"); cb.type = "checkbox"; cb.id = "new-cat-weather";
+      chk.append(cb, document.createTextNode("날씨 기록하기"));
+      const row = el("div", "row");
+      const ok = el("button", "btn", "만들기"); ok.type = "submit";
+      const no = el("button", "ghost", "취소"); no.type = "button"; no.addEventListener("click", renderShelf);
+      row.append(ok, no); f.append(inp, chk, row);
+      f.addEventListener("submit", (ev) => {
+        ev.preventDefault(); const v = inp.value.trim(); if (!v) return;
+        const used = cats.map((x) => x.color);
+        const color = COLORS.findIndex((_, k) => !used.includes(k));
+        cats.push({ id: newId("c"), name: v, weather: cb.checked, color: color < 0 ? cats.length % COLORS.length : color });
+        saveCats(); renderShelf();
+      });
+      add.appendChild(f); inp.focus();
+    });
+    add.appendChild(open); box.appendChild(add);
+  }
+  $("editShelf").addEventListener("click", () => { editing = !editing; renderShelf(); });
+
+  async function saveCats() {
+    try { await store.saveCats(cats); } catch { $("saveNote").textContent = "카테고리를 저장하지 못했어요. 잠시 후 다시 해보세요."; }
+  }
+
+  /* ---------- list ---------- */
+  function renderList() {
+    if (!catId) return;
+    const q = $("search").value.trim().toLowerCase();
+    const all = entriesIn(catId);
+    $("count").textContent = all.length ? all.length + "편" : "";
+    const list = $("list"); list.textContent = "";
+    const shown = all.filter((e) => !q || (e.title + " " + e.body).toLowerCase().includes(q));
+    if (!shown.length) {
+      list.appendChild(el("li", "empty-list", q ? "'" + $("search").value.trim() + "'이(가) 들어간 글이 없어요." : "아직 글이 없어요. 위의 버튼을 눌러 첫 글을 써보세요. 쓰는 동안 저절로 저장돼요."));
+      return;
+    }
+    let lastMonth = "";
+    shown.forEach((e) => {
+      const d = parse(e.date);
+      const m = d.getFullYear() + "년 " + (d.getMonth() + 1) + "월";
+      if (m !== lastMonth) { lastMonth = m; list.appendChild(el("li", "month", m)); }
+      const li = el("li");
+      const b = el("button", "entry"); b.type = "button";
+      if (e.id === current) b.setAttribute("aria-current", "true");
+      const day = el("span", "day"); day.append(el("b", null, d.getDate()), el("small", null, DOW[d.getDay()] + (e.weather ? " · " + e.weather : "")));
+      const txt = el("span", "txt"); txt.append(el("div", "t", e.title.trim() || "제목 없음"), el("div", "p", [checkSummary(e), e.body.trim().replace(/\s+/g, " ")].filter(Boolean).join(" · ") || " "));
+      b.append(day, txt); b.addEventListener("click", () => openEntry(e.id));
+      li.appendChild(b); list.appendChild(li);
+    });
+  }
+
+  /* ---------- page ---------- */
+  WEATHERS.forEach((w) => {
+    const b = el("button", null, w); b.type = "button"; b.dataset.w = w; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => { const e = entries[current]; if (!e) return; e.weather = e.weather === w ? "" : w; paintWeather(); queueSave(true); });
+    $("weather").appendChild(b);
+  });
+  function paintWeather() {
+    const c = catOf(catId); $("weather").hidden = !(c && c.weather);
+    const w = (entries[current] || {}).weather || "";
+    $("weather").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.w === w)));
+  }
+  function renderPage() {
+    const e = entries[current];
+    $("blank").hidden = !!e; $("editor").hidden = !e;
+    $("editor").style.display = e ? "contents" : "none";
+    if (!e) return;
+    $("dateLabel").textContent = longLabel(e.date);
+    $("dateInput").value = e.date;
+    if ($("titleInput").value !== e.title) $("titleInput").value = e.title;
+    if ($("bodyInput").value !== e.body) $("bodyInput").value = e.body;
+    $("chars").textContent = e.body.length.toLocaleString("ko-KR") + "자";
+    paintWeather(); renderChecks(); resetDelete();
+  }
+
+  /* ---------- checklist block ---------- */
+  function renderChecks(focusIdx) {
+    const e = entries[current], box = $("checks");
+    box.textContent = "";
+    if (!e) { box.hidden = true; return; }
+    const cs = e.checks || (e.checks = []);
+    box.hidden = !cs.length;
+    const rows = cs.map((c, i) => {
+      const row = el("div", "ck" + (c.done ? " done" : ""));
+      const cb = el("input"); cb.type = "checkbox"; cb.id = "ck-" + i; cb.checked = c.done; cb.setAttribute("aria-label", "완료 표시");
+      cb.addEventListener("change", () => { c.done = cb.checked; row.classList.toggle("done", c.done); queueSave(true); });
+      const txt = el("input", "ck-text"); txt.type = "text"; txt.id = "ckt-" + i; txt.value = c.text; txt.placeholder = "할 일"; txt.setAttribute("aria-label", "체크 항목");
+      txt.addEventListener("input", () => { c.text = txt.value; queueSave(); });
+      txt.addEventListener("keydown", (ev) => {
+        if (ev.isComposing) return;
+        if (ev.key === "Enter") { ev.preventDefault(); cs.splice(i + 1, 0, { text: "", done: false }); renderChecks(i + 1); queueSave(true); }
+        else if (ev.key === "Backspace" && txt.value === "") { ev.preventDefault(); removeCheck(i); }
+      });
+      const x = el("button", "ghost x", "×"); x.type = "button"; x.setAttribute("aria-label", "항목 지우기");
+      x.addEventListener("click", () => removeCheck(i));
+      row.append(cb, txt, x); box.appendChild(row);
+      return txt;
+    });
+    if (focusIdx != null && rows[focusIdx]) { const t = rows[focusIdx]; t.focus(); t.setSelectionRange(t.value.length, t.value.length); }
+  }
+  function removeCheck(i) {
+    const cs = entries[current].checks; cs.splice(i, 1);
+    if (cs.length) renderChecks(Math.max(0, i - 1)); else { renderChecks(); $("bodyInput").focus(); }
+    queueSave(true);
+  }
+  $("addCheck").addEventListener("click", () => {
+    const e = entries[current]; if (!e) return;
+    (e.checks || (e.checks = [])).push({ text: "", done: false });
+    renderChecks(e.checks.length - 1); queueSave(true);
+  });
+
+  function newEntry() {
+    const c = catOf(catId);
+    if (c.weather) {
+      // a diary-like notebook keeps one page per day: reopen today's if it exists
+      const today = entriesIn(catId).find((e) => e.date === todayKey());
+      if (today) { openEntry(today.id); $("bodyInput").focus(); return; }
+    }
+    flush(); dropEmpty();
+    const id = newId("e");
+    entries[id] = { id, cat: catId, date: todayKey(), title: "", body: "", weather: "", checks: [], createdAt: Date.now(), updatedAt: 0 };
+    current = id; $("inside").dataset.sub = "page"; $("status").textContent = "";
+    renderList(); renderPage(); $("titleInput").focus();
+  }
+  $("newBtn").addEventListener("click", newEntry);
+
+  /* ---------- saving ---------- */
+  function queueSave(now) {
+    dirty = true; $("status").textContent = "쓰는 중…";
+    $("chars").textContent = ((entries[current] || {}).body || "").length.toLocaleString("ko-KR") + "자";
+    clearTimeout(saveTimer); saveTimer = setTimeout(flush, now ? 50 : 900);
+  }
+  function flush() {
+    clearTimeout(saveTimer);
+    if (!dirty) return;
+    dirty = false;
+    const e = entries[current]; if (!e) return;
+    e.updatedAt = Date.now();
+    const copy = { ...e, checks: (e.checks || []).map((c) => ({ ...c })) };
+    saving = saving.then(async () => {
+      try {
+        if (hasContent(copy)) await store.save(copy); else await store.remove(copy.id);
+        $("status").textContent = "저장됨";
+      } catch (err) {
+        $("status").textContent = err && err.code === "quota_exceeded" ? "저장 공간이 가득 찼어요. 오래된 글을 지워주세요." : "저장하지 못했어요. 잠시 후 다시 써보세요.";
+      }
+    });
+    renderList(); resetDelete();
+  }
+  $("titleInput").addEventListener("input", (ev) => { if (entries[current]) { entries[current].title = ev.target.value; queueSave(); } });
+  $("bodyInput").addEventListener("input", (ev) => { if (entries[current]) { entries[current].body = ev.target.value; queueSave(); } });
+  $("titleInput").addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); $("bodyInput").focus(); } });
+  $("dateInput").addEventListener("change", (ev) => { const e = entries[current]; if (e && ev.target.value) { e.date = ev.target.value; $("dateLabel").textContent = longLabel(e.date); queueSave(true); } });
+  $("search").addEventListener("input", renderList);
+  $("backBtn").addEventListener("click", () => { flush(); dropEmpty(); current = null; $("inside").dataset.sub = "list"; renderList(); });
+  $("toShelf").addEventListener("click", () => { dropEmpty(); showShelf(); });
+  window.addEventListener("pagehide", flush);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) flush(); });
+
+  function resetDelete() {
+    const a = $("delArea"); a.textContent = "";
+    if (!hasContent(entries[current])) return;
+    const b = el("button", "ghost danger", "이 글 지우기"); b.type = "button";
+    b.addEventListener("click", () => {
+      a.textContent = "";
+      const box = el("span", "confirm");
+      const yes = el("button", "btn btn-danger", "지우기"); yes.type = "button";
+      const no = el("button", "ghost", "취소"); no.type = "button";
+      yes.addEventListener("click", async () => {
+        const id = current; delete entries[id]; dirty = false; clearTimeout(saveTimer);
+        current = null; $("inside").dataset.sub = "list"; renderPage(); renderList();
+        try { await store.remove(id); } catch {}
+      });
+      no.addEventListener("click", resetDelete);
+      box.append(el("span", null, "정말 지울까요? 되돌릴 수 없어요."), yes, no); a.appendChild(box); no.focus();
+    });
+    a.appendChild(b);
+  }
+
+  /* ---------- boot ---------- */
+  local.load(); store = local;
+  $("saveNote").textContent = "이 기기의 브라우저에 저장돼요.";
+  renderShelf();
+
+  /* ---------- this phone only ---------- */
+  $("saveNote").textContent = "글은 이 휴대폰 안에만 저장돼요. 휴대폰을 바꾸기 전에 백업 파일을 만들어 두세요.";
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch {}
+  const say = (t) => { $("toolMsg").textContent = t; };
+
+  $("exportBtn").addEventListener("click", async () => {
+    flush();
+    const data = JSON.stringify({ app: "geulbang", version: 1, savedAt: new Date().toISOString(), cats, entries }, null, 1);
+    const name = "글방-백업-" + todayKey() + ".json";
+    const file = new File([data], name, { type: "application/json" });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: name });
+        say("백업 파일을 보냈어요. 파일 앱이나 카카오톡 나에게 보내기 등에 저장해 두세요."); return;
+      }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(file); a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    say("백업 파일을 '다운로드' 폴더에 저장했어요.");
+  });
+
+  $("importBtn").addEventListener("click", () => $("importFile").click());
+  $("importFile").addEventListener("change", async (ev) => {
+    const f = ev.target.files && ev.target.files[0]; ev.target.value = "";
+    if (!f) return;
+    try {
+      const v = JSON.parse(await f.text());
+      if (!v || v.app !== "geulbang" || !v.entries) throw new Error("bad");
+      let added = 0;
+      (v.cats || []).forEach((c) => { if (c && c.id && !catOf(c.id)) cats.push(c); });
+      Object.entries(v.entries).forEach(([k, e]) => {
+        const n = normalize(e, k);
+        if (!n.date) return;
+        if (!entries[n.id] || (entries[n.id].updatedAt || 0) < (n.updatedAt || 0)) { entries[n.id] = n; added++; }
+      });
+      local.write(); renderShelf();
+      say(added ? "글 " + added + "편을 불러왔어요." : "새로 불러올 글이 없어요. 이미 다 들어 있어요.");
+    } catch { say("글방 백업 파일이 아니에요. '글방-백업'으로 시작하는 파일을 골라주세요."); }
+  });
+
+  // Android Chrome offers a real install; show the button only when it can
+  let installEvt = null;
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; $("installBtn").hidden = false; });
+  $("installBtn").addEventListener("click", async () => {
+    if (!installEvt) return;
+    installEvt.prompt(); await installEvt.userChoice.catch(() => {}); installEvt = null; $("installBtn").hidden = true;
+  });
+  window.addEventListener("appinstalled", () => { $("installBtn").hidden = true; say("설치됐어요. 홈 화면의 글방 아이콘으로 여세요."); });
+
+  /* ---------- sharing through KakaoTalk and installing ---------- */
+  const APP_URL = location.origin + location.pathname;
+  const ua = navigator.userAgent || "";
+  const isKakao = /KAKAOTALK/i.test(ua);
+  const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const banner = $("banner");
+  function showBanner(html, btnText, onClick) {
+    banner.innerHTML = html;
+    if (btnText) { const b = el("button", "btn", btnText); b.type = "button"; b.addEventListener("click", onClick); banner.appendChild(el("br")); banner.appendChild(b); }
+    banner.hidden = false;
+  }
+  const openOutside = () => { location.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(APP_URL); };
+  if (isKakao) {
+    // KakaoTalk's built-in browser cannot install apps: hand the page to Safari / Chrome
+    showBanner("카카오톡 안에서는 설치가 안 돼요. <b>" + (isIOS ? "사파리로" : "크롬으로") + " 열어서</b> 설치해 주세요.<br>안 넘어가면 오른쪽 아래(또는 위) 메뉴에서 '다른 브라우저로 열기'를 누르세요.", (isIOS ? "사파리로" : "크롬으로") + " 열기", openOutside);
+    setTimeout(openOutside, 300);
+  } else if (isIOS && !standalone) {
+    showBanner("<b>설치하는 법</b>: 화면 아래 공유 버튼(네모에 위쪽 화살표)을 누르고 <b>'홈 화면에 추가'</b>를 누르세요. 그다음부터는 홈 화면의 글방 아이콘으로 여세요.");
+  } else if (!standalone) {
+    window.addEventListener("beforeinstallprompt", () => {
+      showBanner("이 휴대폰에 <b>글방 앱을 설치</b>할 수 있어요.", "설치하기", () => $("installBtn").click());
+    });
+  }
+  window.addEventListener("appinstalled", () => { banner.hidden = true; });
+
+  $("shareBtn").addEventListener("click", async () => {
+    const text = "나만의 글쓰기 앱 '글방'이에요. 링크를 눌러 설치해 보세요. 글은 각자 휴대폰에만 저장돼요.";
+    try {
+      if (navigator.share) { await navigator.share({ title: "글방", text, url: APP_URL }); return; }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    try { await navigator.clipboard.writeText(text + "\n" + APP_URL); say("링크를 복사했어요. 카카오톡 대화창에 붙여넣으세요."); }
+    catch { say("이 주소를 카카오톡으로 보내세요: " + APP_URL); }
+  });
+
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  }
+})();
+</script>
+
+</body>
+</html>
