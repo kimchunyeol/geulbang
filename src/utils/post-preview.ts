@@ -19,6 +19,15 @@ export function getPostPreview(post: Post) {
     .trim();
 }
 
+// 검색어가 제목이나 본문(체크 블록 포함)에 들어 있는지 확인해요. 영어 대소문자는 구분하지 않아요.
+export function postMatches(post: Post, query: string) {
+  const keyword = query.trim().toLowerCase();
+  if (keyword === '') return true;
+  return [post.title, ...post.blocks.map((block) => block.text)].some((text) =>
+    text.toLowerCase().includes(keyword)
+  );
+}
+
 // 체크 블록이 있으면 "2/5"처럼 완료 개수를 알려줘요.
 export function getChecklistProgress(post: Post) {
   const checks = post.blocks.filter((block) => block.type === 'check');

@@ -1,4 +1,5 @@
 import { Link, router, Stack, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { findCategory } from '@/constants/categories';
@@ -6,7 +7,12 @@ import { Fonts, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { usePosts, type Post } from '@/store/posts';
 import { formatShortDate } from '@/utils/format-date';
-import { getChecklistProgress, getPostPreview, getPostTitle } from '@/utils/post-preview';
+import {
+  getChecklistProgress,
+  getPostPreview,
+  getPostTitle,
+  postMatches,
+} from '@/utils/post-preview';
 
 // 글 목록 화면. 주소의 [id] 자리에 diary / memo / essay 가 들어와요.
 export default function CategoryScreen() {
@@ -14,14 +20,16 @@ export default function CategoryScreen() {
   const category = findCategory(id);
   const colors = useTheme();
   const { posts, isLoaded, createPost, deletePost } = usePosts();
+  const [query, setQuery] = useState(''); // 검색창에 입력한 글자
 
   if (!category) {
     return <Text style={[styles.empty, { color: colors.textSecondary }]}>없는 카테고리예요</Text>;
   }
 
   const categoryPosts = posts
-    .filter((post) => post.category === category.id)
+    .filter((post) => post.category === category.id && postMatches(post, query))
     .sort((a, b) => b.updatedAt - a.updatedAt);
+  const isSearching = query.trim() !== '';
 
   function handleWrite() {
     const postId = createPost(category!.id);
@@ -45,6 +53,18 @@ export default function CategoryScreen() {
               <Text style={[styles.writeButton, { color: colors.accent }]}>쓰기</Text>
             </Pressable>
           ),
+          // 헤더의 검색창. 글자를 칠 때마다 query가 바뀌고, 목록이 바로 걸러져요.
+          headerSearchBarOptions: {
+            placeholder: `${category.name}에서 찾기`,
+            hideWhenScrolling: false,
+            autoCapitalize: 'none',
+            tintColor: colors.accent,
+            textColor: colors.text,
+            hintTextColor: colors.textSecondary,
+            headerIconColor: colors.text,
+            onChangeText: (event) => setQuery(event.nativeEvent.text),
+            onCancelButtonPress: () => setQuery(''),
+          },
         }}
       />
       <FlatList
@@ -56,11 +76,15 @@ export default function CategoryScreen() {
           <View style={[styles.separator, { backgroundColor: colors.border }]} />
         )}
         ListEmptyComponent={
-          isLoaded ? (
+          !isLoaded ? undefined : isSearching ? (
+            <Text style={[styles.empty, { color: colors.textSecondary }]}>
+              ‘{query.trim()}’이(가) 들어간 글이 없어요.
+            </Text>
+          ) : (
             <Text style={[styles.empty, { color: colors.textSecondary }]}>
               아직 쓴 글이 없어요.{'\n'}오른쪽 위 ‘쓰기’를 눌러 시작해 보세요.
             </Text>
-          ) : undefined
+          )
         }
         renderItem={({ item: post }) => {
           const preview = getPostPreview(post);
