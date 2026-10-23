@@ -45,6 +45,7 @@ type PostsContextValue = {
   updatePost: (id: string, changes: Partial<Pick<Post, 'title' | 'blocks'>>) => void;
   deletePost: (id: string) => void;
   discardIfEmpty: (id: string) => void;
+  restorePosts: (incoming: Post[]) => { added: number; updated: number };
 };
 
 const PostsContext = createContext<PostsContextValue | null>(null);
@@ -107,9 +108,29 @@ export function PostsProvider({ children }: { children: ReactNode }) {
     setPosts((prev) => prev.filter((post) => post.id !== id || !isPostEmpty(post)));
   }, []);
 
+  // 백업 파일의 글을 지금 글 목록에 합쳐요. 지금 있는 글은 지우지 않아요.
+  // 같은 글(id가 같은 글)이 양쪽에 있으면 더 나중에 고친 쪽을 남겨요.
+  function restorePosts(incoming: Post[]) {
+    const byId = new Map(posts.map((post) => [post.id, post]));
+    let added = 0;
+    let updated = 0;
+    for (const post of incoming) {
+      const current = byId.get(post.id);
+      if (!current) {
+        added++;
+        byId.set(post.id, post);
+      } else if (post.updatedAt > current.updatedAt) {
+        updated++;
+        byId.set(post.id, post);
+      }
+    }
+    setPosts([...byId.values()].sort((a, b) => b.createdAt - a.createdAt));
+    return { added, updated };
+  }
+
   return (
     <PostsContext.Provider
-      value={{ posts, isLoaded, createPost, updatePost, deletePost, discardIfEmpty }}>
+      value={{ posts, isLoaded, createPost, updatePost, deletePost, discardIfEmpty, restorePosts }}>
       {children}
     </PostsContext.Provider>
   );
