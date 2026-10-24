@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbf4e6"/><stop offset="1" stop-color="#f1e3c8"/>
+    </linearGradient>
+    <linearGradient id="crepe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e9b770"/><stop offset="1" stop-color="#c98a45"/>
+    </linearGradient>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <!-- iOS용: 시스템이 모서리를 둥글게 깎으므로 꽉 찬 정사각형 -->
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#bg)"/>
+  <g transform="translate(512 512) scale(1.12) translate(-512 -490)">
+  <!-- 접시 -->
+  <ellipse cx="512" cy="700" rx="300" ry="62" fill="#e6d3b0"/>
+  <!-- 크레페 더미 -->
+  <g>
+    <rect x="262" y="600" width="500" height="64" rx="32" fill="url(#crepe)"/>
+    <rect x="252" y="540" width="520" height="66" rx="33" fill="#dca661"/>
+    <rect x="272" y="482" width="480" height="64" rx="32" fill="url(#crepe)"/>
+    <rect x="262" y="424" width="500" height="64" rx="32" fill="#dca661"/>
+    <path d="M300 446 q 212 -26 424 0" fill="none" stroke="#f6d9a6" stroke-width="10" stroke-linecap="round" opacity=".8"/>
+  </g>
+  <!-- 꽂힌 펜촉 -->
+  <g transform="translate(560 168) rotate(18)">
+    <rect x="-34" y="0" width="68" height="190" rx="14" fill="#3a2a22"/>
+    <rect x="-34" y="150" width="68" height="26" fill="#b0503c"/>
+    <path d="M-34 186 L34 186 L0 290 Z" fill="#b0503c"/>
+    <circle cx="0" cy="236" r="8" fill="#fbf4e6"/>
+    <line x1="0" y1="244" x2="0" y2="286" stroke="#fbf4e6" stroke-width="5"/>
+  </g>
+</g>
+</svg>

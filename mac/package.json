@@ -1,0 +1,26 @@
+{
+  "name": "geulbang",
+  "productName": "글방",
+  "version": "1.1.0",
+  "description": "이야기별로 글을 모으는 미니멀 글쓰기 앱",
+  "main": "main.js",
+  "author": "soyoulkim",
+  "license": "ISC",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --mac --dir"
+  },
+  "build": {
+    "appId": "com.soyoulkim.geulbang",
+    "productName": "Geulbang",
+    "files": ["main.js", "preload.js", "db.js", "sync.js", "src/**"],
+    "mac": { "category": "public.app-category.productivity", "target": "dir", "icon": "build/icon.png",
+             "identity": "-", "hardenedRuntime": false,
+             "extendInfo": { "CFBundleDisplayName": "글방" } }
+  },
+  "devDependencies": {
+    "electron": "^45.0.0",
+    "electron-builder": "^26.18.0"
+  }
+}

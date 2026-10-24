@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "글방",
+    "slug": "geulbang",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "geulbang",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.soyoulkim.geulbang",
+      "supportsTablet": true,
+      "icon": "./assets/images/icon.png",
+      "infoPlist": {
+        "CFBundleDevelopmentRegion": "ko"
+      }
+    },
+    "android": {
+      "package": "com.soyoulkim.geulbang",
+      "adaptiveIcon": {
+        "backgroundColor": "#F6EBD6",
+        "foregroundImage": "./assets/images/icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FBF4E6",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 140,
+          "dark": {
+            "backgroundColor": "#1B1B1D",
+            "image": "./assets/images/splash-icon.png"
+          }
+        }
+      ],
+      "expo-sqlite",
+      "expo-sharing",
+      "expo-image",
+      "expo-font",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "글에 사진을 첨부하려면 사진첩 접근이 필요해요.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

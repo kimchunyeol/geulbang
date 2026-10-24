@@ -1,0 +1,5 @@
+node_modules/
+.DS_Store
+
+# Mac 앱 빌드 결과 (Releases에 올림)
+mac/dist/
