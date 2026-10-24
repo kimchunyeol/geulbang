@@ -536,7 +536,12 @@ async function restore() {
       settings: { ...seed().settings, ...data.settings, theme: store.data.settings.theme } };
     await store.flush();
     state.storyId = liveStories()[0]?.id || null; state.view = 'story'; applyTheme(); render();
-  } catch (err) { alert('백업 파일을 읽을 수 없습니다: ' + err.message); }
+  } catch (err) {
+    // Mac은 오류 앞에 IPC 설명이 붙어 오므로 문구로 구분한다
+    if (String(err.message).includes('글방 백업 파일이 아니에요')) {
+      alert('고른 파일은 글방 백업 파일이 아니에요.\n\n글방의 "백업 내보내기"(Mac은 파일 › "전체 백업…")로 만든 geulbang-backup-….json 파일을 골라 주세요.');
+    } else alert('백업 파일을 읽을 수 없습니다: ' + err.message);
+  }
 }
 function exportPDF() {
   const p = state.view === 'read' && post(state.postId), s = story(state.storyId);

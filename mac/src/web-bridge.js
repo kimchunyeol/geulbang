@@ -174,10 +174,14 @@
       return deliver(`geulbang-backup-${localDate()}.json`, new Blob([json], { type: 'application/json' }));
     },
     async openBackup() {
-      const [file] = await chooseFiles('application/json,.json', false);
+      // 형식을 제한하면 iPhone 파일 앱에서 .json 백업까지 회색으로 막혀 고를 수 없다 → 아무 파일이나 고르고 내용으로 검사
+      const [file] = await chooseFiles('', false);
       if (!file) return null;
-      const parsed = JSON.parse(await file.text());
-      if (!Array.isArray(parsed.stories) || !Array.isArray(parsed.posts)) throw new Error('글방 백업 파일이 아니에요.');
+      let parsed = null;
+      try { parsed = JSON.parse(await file.text()); } catch {}
+      if (!Array.isArray(parsed?.stories) || !Array.isArray(parsed?.posts) || (parsed.format && parsed.format !== 'geulbang-backup')) {
+        throw new Error('글방 백업 파일이 아니에요.');
+      }
       let photos = 0;
       for (const [name, b64] of Object.entries(parsed.photoData ?? {})) {
         if (!PHOTO_NAME.test(name) || typeof b64 !== 'string') continue;
