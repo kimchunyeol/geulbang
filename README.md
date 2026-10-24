@@ -3,8 +3,8 @@
 이야기별로 글을 모아 두는 우리 가족 글쓰기 앱이에요.
 이야기(공책)를 만들고, 그 안에 날짜별로 글과 사진을 남겨요.
 
-- `mac/` — Mac 앱 (Electron)
-- `iphone/` — 아이폰 앱 (Expo)
+- **아이폰·아이패드·안드로이드**: https://kimchunyeol.github.io/geulbang/ (웹앱)
+- **Mac**: [Releases](https://github.com/kimchunyeol/geulbang/releases/latest)에서 `Geulbang-mac.zip`
 
 ## Mac에서 쓰기
 
@@ -18,23 +18,20 @@ Apple Silicon(M1 이상) Mac용이에요.
 
 ## 아이폰에서 쓰기
 
-지금은 **Expo Go** 앱으로 열어요. 아직 App Store에 올리지 않았어요.
+1. 아이폰 **Safari**로 https://kimchunyeol.github.io/geulbang/ 을 열어요.
+2. 아래쪽 **공유 버튼**(네모에 화살표) › **홈 화면에 추가**를 눌러요.
+3. 홈 화면의 **글방** 아이콘으로 열면 앱처럼 전체 화면으로 열리고, 인터넷이 없어도 써져요.
 
-1. 아이폰에 App Store에서 **Expo Go**를 설치해요.
-2. 개발용 Mac에서 아래를 실행하고, 화면의 QR 코드를 아이폰 카메라로 찍어요. (Mac과 아이폰이 같은 Wi-Fi에 있어야 해요)
-
-   ```sh
-   cd iphone
-   npm install
-   npx expo start
-   ```
+- 글과 사진은 **그 아이폰 안에만** 저장돼요. 서버로 올라가지 않아요.
+- 아이폰을 바꾸거나 저장 공간을 정리하면 사라질 수 있으니 ☰ › **백업 내보내기**로 가끔 백업 파일을 받아 두세요.
+- Safari에서 연 글방과 홈 화면 아이콘으로 연 글방은 저장 공간이 따로예요. 한쪽에서만 쓰세요.
 
 ## Mac ↔ 아이폰 글 옮기기
 
 백업 파일 하나에 글과 사진이 모두 들어가요.
 
-- **아이폰 → Mac**: 아이폰 글방 › 설정 › **백업 내보내기** → AirDrop으로 Mac에 보내기 → Mac 글방 › 파일 › **백업에서 복원…**
-- **Mac → 아이폰**: Mac 글방 › 파일 › **전체 백업…** → 파일을 아이폰으로 보내기 → 아이폰 글방 › 설정 › **백업 불러오기**
+- **아이폰 → Mac**: 아이폰 글방 › ☰ › **백업 내보내기** → AirDrop으로 Mac에 보내기 → Mac 글방 › 파일 › **백업에서 복원…**
+- **Mac → 아이폰**: Mac 글방 › 파일 › **전체 백업…** → 파일을 아이폰으로 보내기(AirDrop 등) → 아이폰 글방 › ☰ › **백업 불러오기**
 
 복원하면 그 기기의 글이 백업 내용으로 **통째로 바뀌어요** (합쳐지지 않아요).
 
@@ -49,6 +46,18 @@ Mac끼리는 설정에서 **iCloud 동기화**를 켜면 같은 Apple 계정의 
 - Mac: Markdown 내보내기, PDF 저장, iCloud Drive 동기화, 다크 모드
 
 ## 개발
+
+- `mac/` — Mac 앱 (Electron). 화면은 `mac/src/index.html` 하나이고 웹앱도 같은 파일을 써요.
+- `docs/` — 웹앱 (GitHub Pages). `index.html`, `web-bridge.js`는 아래 명령이 만드는 사본이라 직접 고치지 않아요.
+- `iphone/` — Expo로 만든 아이폰 앱 (App Store/TestFlight용, 지금은 개발용으로만 씀)
+
+화면을 고친 뒤 웹앱에 반영하려면:
+
+```sh
+cd mac
+npm run web        # mac/src → docs/ 복사, 오프라인 보관본 버전 갱신
+git add -A && git commit && git push   # 1~2분 뒤 웹앱 주소에 반영
+```
 
 ### Mac 앱
 

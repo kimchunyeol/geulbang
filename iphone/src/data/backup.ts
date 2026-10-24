@@ -6,6 +6,7 @@ import * as Sharing from 'expo-sharing';
 import { cleanupPhotos, photoFile } from './photos';
 import { replaceAll, store } from './store';
 import { DEFAULT_SETTINGS, type Data } from './types';
+import { localDate } from '@/utils/format';
 
 type Backup = Data & { format?: string; version?: number; exportedAt?: number; photoData?: Record<string, string> };
 
@@ -19,7 +20,7 @@ export async function exportBackup() {
     if (f.exists) photoData[name] = await f.base64();
   }
   const backup: Backup = { format: 'geulbang-backup', version: 2, exportedAt: Date.now(), ...data, photoData };
-  const file = new File(Paths.cache, `geulbang-backup-${new Date().toISOString().slice(0, 10)}.json`);
+  const file = new File(Paths.cache, `geulbang-backup-${localDate()}.json`);
   file.write(JSON.stringify(backup));
   await Sharing.shareAsync(file.uri, { mimeType: 'application/json', UTI: 'public.json', dialogTitle: '글방 백업' });
 }

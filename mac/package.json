@@ -9,15 +9,29 @@
   "type": "commonjs",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --mac --dir"
+    "dist": "electron-builder --mac --dir",
+    "web": "node scripts/build-web.js"
   },
   "build": {
     "appId": "com.soyoulkim.geulbang",
     "productName": "Geulbang",
-    "files": ["main.js", "preload.js", "db.js", "sync.js", "src/**"],
-    "mac": { "category": "public.app-category.productivity", "target": "dir", "icon": "build/icon.png",
-             "identity": "-", "hardenedRuntime": false,
-             "extendInfo": { "CFBundleDisplayName": "글방" } }
+    "files": [
+      "main.js",
+      "preload.js",
+      "db.js",
+      "sync.js",
+      "src/**"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": "dir",
+      "icon": "build/icon.png",
+      "identity": "-",
+      "hardenedRuntime": false,
+      "extendInfo": {
+        "CFBundleDisplayName": "글방"
+      }
+    }
   },
   "devDependencies": {
     "electron": "^45.0.0",

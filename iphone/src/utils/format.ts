@@ -17,3 +17,8 @@ export function countLabel(text: string, mode: number) {
   if (mode === 2) return `글자 ${text.replace(/\s/g, '').length} (공백 제외)`;
   return `단어 ${(text.trim().match(/\S+/g) || []).length}`;
 }
+
+// 파일 이름용 오늘 날짜 (기기 시간 기준, toISOString은 세계 표준시라 아침에 하루 밀림)
+export function localDate(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}

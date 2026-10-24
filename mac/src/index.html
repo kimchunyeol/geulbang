@@ -2,8 +2,16 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' photo:">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1b1d" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="글방">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/favicon.png">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' photo: blob:; connect-src 'self' blob:">
 <title>글방</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@300;400&display=swap" rel="stylesheet">
@@ -106,9 +114,22 @@
 
   @media (max-width: 720px) {
     .app { grid-template-columns: 1fr; }
-    aside { display: none; } .app.side-open aside { display: flex; position: fixed; inset: 0 30% 0 0; z-index: 10; }
+    aside { display: none; } .app.side-open aside { display: flex; position: fixed; inset: 0 22% 0 0; z-index: 10; box-shadow: 0 0 40px rgba(0,0,0,.25); }
+    .app.side-open main::after { content: ''; position: fixed; inset: 0; z-index: 9; background: rgba(0,0,0,.25); }
     .wrap { padding: 32px 16px 100px; } .saved { left: 16px; }
+    /* 아이폰은 16px보다 작은 입력칸에 초점이 가면 화면을 확대해 버림 */
+    input, select, textarea, .editor input.date { font-size: max(16px, 1em); }
   }
+
+  /* 웹앱(브라우저·홈 화면)일 때: 맥 신호등 자리 대신 아이폰 안전 영역 */
+  .web-only { display: none; }
+  .web .web-only { display: inline-block; }
+  .web body { touch-action: manipulation; }
+  .web .brand { padding-top: max(22px, env(safe-area-inset-top)); }
+  .web .toolbar { padding-top: max(12px, env(safe-area-inset-top)); }
+  .web .side-foot { padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+  .web .counter { bottom: calc(18px + env(safe-area-inset-bottom)); }
+  .web .saved { bottom: calc(18px + env(safe-area-inset-bottom)); }
   @media print {
     aside, .toolbar, .counter, .saved, .hint { display: none !important; } .app { display: block; }
     .gallery img { break-inside: avoid; max-height: 60vh; object-fit: contain; }
@@ -126,6 +147,8 @@
       <button id="btnAddFolder">＋ 폴더</button>
       <button id="btnTrash">휴지통</button>
       <button id="btnSettings">설정</button>
+      <button id="btnBackup" class="web-only">백업 내보내기</button>
+      <button id="btnRestore" class="web-only">백업 불러오기</button>
     </div>
   </aside>
   <main id="main"></main>
@@ -134,6 +157,7 @@
 
 <dialog id="dlg"><form method="dialog" id="dlgForm"></form></dialog>
 
+<script src="web-bridge.js"></script>
 <script>
 // ---------- 저장소 (메인 프로세스의 SQLite에 저장) ----------
 const DAY = 86400000;
@@ -173,7 +197,7 @@ function seed() {
     folders: [],
     stories: [{ id: storyId, folderId: null, title: '나의 첫 이야기', subtitle: '매일 한 줄이라도 써 보기', createdAt: now,
       trashedAt: null, orderBy: 'writedAt', orderDir: 'desc', rank: 0, dateVisible: true }],
-    posts: [{ id: 'welcome-post', storyId, title: '시작', text: '여기에 첫 글이 있습니다.\n\n왼쪽 목록에서 이야기를 고르고, 위의 "새 글"을 눌러 글을 써 보세요.\n글을 더블클릭하면 수정할 수 있어요.',
+    posts: [{ id: 'welcome-post', storyId, title: '시작', text: '여기에 첫 글이 있습니다.\n\n이야기 목록(☰)에서 이야기를 고르고, "새 글 쓰기"를 눌러 글을 써 보세요.\n글을 두 번 누르면 수정할 수 있어요.',
       writedAt: now, editedAt: now, trashedAt: null, align: 'left', photos: [] }],
     settings: { theme: 'light', fontSize: 17, countMode: 0 },
   };
@@ -262,7 +286,7 @@ function render() {
           ${photosOf(p).length > 1 ? `<div class="rest">${photosOf(p).slice(1).map(n => `<img src="${photoUrl(n)}" data-zoom="${esc(n)}" alt="" loading="lazy">`).join('')}</div>` : ''}
         </div>` : ''}
         <div class="body ${p.align}">${esc(p.text)}</div>
-        <div class="hint">더블클릭하면 글을 수정할 수 있어요</div>
+        <div class="hint">글을 두 번 누르거나 위의 수정을 누르면 고칠 수 있어요</div>
       </div>
       <div class="counter" id="counter"></div>`;
     updateCounter(p.text);
@@ -315,7 +339,8 @@ function render() {
 
 // ---------- 사진 ----------
 const photosOf = p => Array.isArray(p.photos) ? p.photos : [];
-const photoUrl = name => 'photo://local/' + encodeURIComponent(name);
+const photoUrl = name => window.geulbang.photoUrl ? window.geulbang.photoUrl(name) : 'photo://local/' + encodeURIComponent(name);
+const isWeb = window.geulbang.platform === 'web';
 
 // 첫 번째 사진이 커버. 다른 사진을 누르면 커버로 올라감
 function renderPhotoStrip(p) {
@@ -470,13 +495,15 @@ async function addFolder() {
 async function settings() {
   const st = store.data.settings;
   const sy = await window.geulbang.syncStatus();
-  const syncDesc = !sy.available ? 'iCloud Drive를 찾을 수 없어 동기화를 쓸 수 없어요.\n시스템 설정 › Apple 계정 › iCloud에서 iCloud Drive를 켜 주세요.'
+  const syncDesc = isWeb ? '글과 사진은 이 기기의 브라우저 안에만 저장돼요.\n다른 기기로 옮기거나 잃어버리지 않으려면 이야기 목록(☰) 아래의 "백업 내보내기"로 자주 받아 두세요.'
+    : !sy.available ? 'iCloud Drive를 찾을 수 없어 동기화를 쓸 수 없어요.\n시스템 설정 › Apple 계정 › iCloud에서 iCloud Drive를 켜 주세요.'
     : `동기화 폴더: iCloud Drive/글방\n같은 Apple 계정의 다른 Mac에서도 글방을 켜면 글과 사진이 합쳐집니다.`;
   const r = await ask({ title: '설정', desc: syncDesc, fields: [
     ...(sy.available ? [{ name: 'sync', options: [{ value: '1', label: 'iCloud 동기화 켜기' }, { value: '0', label: 'iCloud 동기화 끄기' }], value: sy.enabled ? '1' : '0' }] : []),
     { name: 'theme', options: [{ value: 'light', label: '밝은 테마' }, { value: 'dark', label: '어두운 테마' }], value: st.theme },
     { name: 'fontSize', options: [15, 16, 17, 18, 20, 22].map(n => ({ value: String(n), label: `글자 크기 ${n}px` })), value: String(st.fontSize) },
-    { name: 'data', options: [{ value: '', label: '데이터 작업 없음' }, { value: 'backup', label: '전체 백업 (JSON 다운로드)' }, { value: 'restore', label: '백업에서 복원' }], value: '' }], ok: '적용' });
+    // 웹에서는 파일 선택 창을 버튼을 누른 순간에만 열 수 있어 목록 아래 버튼으로만 백업한다
+    ...(isWeb ? [] : [{ name: 'data', options: [{ value: '', label: '데이터 작업 없음' }, { value: 'backup', label: '전체 백업 (JSON 다운로드)' }, { value: 'restore', label: '백업에서 복원' }], value: '' }])], ok: '적용' });
   if (!r) return;
   st.theme = r.theme; st.fontSize = +r.fontSize; applyTheme(); store.save();
   if (r.sync !== undefined && (r.sync === '1') !== sy.enabled) {
@@ -547,7 +574,9 @@ document.addEventListener('click', async e => {
     case 'btnAddStory': return addStory();
     case 'btnAddFolder': return addFolder();
     case 'btnTrash': state.view = 'trash'; return render();
-    case 'btnSettings': return settings();
+    case 'btnSettings': $('#app').classList.remove('side-open'); return settings();
+    case 'btnBackup': $('#app').classList.remove('side-open'); return backup();
+    case 'btnRestore': $('#app').classList.remove('side-open'); return restore();
     case 'menuBtn': return $('#app').classList.toggle('side-open');
     case 'newPost': return newPost();
     case 'tSearch': state.view = 'search'; return render();
@@ -602,14 +631,22 @@ window.geulbang.onMenu(cmd => {
     case 'settings': return settings();
   }
 });
-// 창을 닫기 직전 남은 저장 반영
-window.addEventListener('beforeunload', () => {
+// 창을 닫거나(맥) 앱을 내리기(아이폰) 직전 남은 저장 반영
+function saveNow() {
   if (state.view === 'edit') {
     const p = post(state.postId), ta = $('#eText');
     if (p && ta) { p.title = $('#eTitle').value; p.text = ta.value; }
   }
+  clearTimeout(store.timer);
   window.geulbang.saveSync(store.data);
-});
+}
+window.addEventListener('beforeunload', saveNow);
+window.addEventListener('pagehide', saveNow);
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
+// 모바일에서 열린 목록 바깥을 누르면 닫기
+$('#main').addEventListener('click', e => {
+  if ($('#app').classList.contains('side-open') && !e.target.closest('#menuBtn')) $('#app').classList.remove('side-open');
+}, true);
 
 window.geulbang.onChanged(() => reloadFromDisk());
 window.geulbang.onSyncStatus(s => renderSyncLine(s));

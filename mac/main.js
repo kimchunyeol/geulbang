@@ -9,6 +9,9 @@ const sync = require('./sync');
 let win;
 let photosDir;
 
+// 파일 이름용 오늘 날짜 (한국 시간 기준, toISOString은 세계 표준시라 아침에 하루 밀림)
+const localDate = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 const PHOTO_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic'];
 const PHOTO_NAME = /^[a-z0-9-]+\.(jpg|jpeg|png|gif|webp|heic)$/;
 
@@ -134,7 +137,7 @@ ipcMain.handle('file:save', async (_e, name, text) => {
 // 백업 파일: 아이폰 글방과 같은 형식. 사진은 photoData에 base64로 함께 담는다
 ipcMain.handle('backup:export', async (_e, data) => {
   const { canceled, filePath } = await dialog.showSaveDialog(win, {
-    defaultPath: path.join(app.getPath('documents'), `geulbang-backup-${new Date().toISOString().slice(0, 10)}.json`),
+    defaultPath: path.join(app.getPath('documents'), `geulbang-backup-${localDate()}.json`),
     filters: [{ name: '글방 백업', extensions: ['json'] }],
   });
   if (canceled || !filePath) return false;
