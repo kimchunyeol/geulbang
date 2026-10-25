@@ -10,6 +10,7 @@
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --mac --dir",
+    "postdist": "node scripts/sign-mac.js",
     "web": "node scripts/build-web.js"
   },
   "build": {
