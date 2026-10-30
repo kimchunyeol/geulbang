@@ -112,8 +112,39 @@
   dialog .row button { padding: 7px 14px; border-radius: 6px; }
   dialog .primary { background: var(--accent); color: #fff; }
 
+  /* ---------- 홈 화면 ---------- */
+  .brand .home-link { font: inherit; letter-spacing: inherit; padding: 0; }
+  .home-title { text-align: center; font-family: var(--serif); font-weight: 700; font-size: 30px; letter-spacing: .12em; margin: 0 0 36px; }
+  .home-sec { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 10px; }
+  .home-sec h2 { margin: 0; font-size: 11px; font-weight: 400; color: var(--muted); letter-spacing: .08em; }
+  .dday-row { display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 12px; margin: 0 -2px 30px; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .dday-row::-webkit-scrollbar { display: none; }
+  .dday { flex: 0 0 auto; min-width: 128px; max-width: 180px; scroll-snap-align: start; text-align: left; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); display: flex; flex-direction: column; gap: 3px; }
+  .dday:hover { border-color: var(--accent); }
+  .dday .num { font-family: var(--serif); font-weight: 700; font-size: 24px; color: var(--accent); font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .dday.past .num { color: var(--muted); }
+  .dday .name { font-family: var(--serif); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dday small { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .dday.today { background: var(--accent); border-color: var(--accent); }
+  .dday.today .num, .dday.today .name, .dday.today small { color: #fff; }
+  .dday.add { justify-content: center; align-items: center; color: var(--muted); border-style: dashed; background: none; font-size: 13px; min-width: 104px; }
+  .dday.add:hover { color: var(--accent); }
+  .home-folder { font-size: 11px; color: var(--muted); letter-spacing: .06em; margin: 26px 0 10px; padding-top: 4px; }
+  .story-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .story-card { text-align: left; width: 100%; min-width: 0; padding: 20px 20px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); display: flex; flex-direction: column; gap: 6px; }
+  .story-card:hover { border-color: var(--accent); }
+  .story-card:hover h3 { color: var(--accent); }
+  .story-card h3 { font-family: var(--serif); font-size: 20px; font-weight: 700; margin: 0; word-break: keep-all; }
+  .story-card .meta { font-size: 11px; color: var(--muted); letter-spacing: .03em; font-variant-numeric: tabular-nums; }
+  .story-card p { font-family: var(--serif); font-size: 14px; color: var(--muted); margin: 6px 0 0; line-height: 1.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .story-card.empty-folder { color: var(--muted); font-size: 13px; border-style: dashed; padding: 16px 20px; }
+  .home-foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line); }
+  dialog label.field { display: block; font-size: 12px; color: var(--muted); margin: 2px 0 4px; }
+
   @media (max-width: 720px) {
     .app { grid-template-columns: 1fr; }
+    .home-title { margin-bottom: 28px; }
+    .story-cards { grid-template-columns: 1fr; }
     aside { display: none; } .app.side-open aside { display: flex; position: fixed; inset: 0 22% 0 0; z-index: 10; box-shadow: 0 0 40px rgba(0,0,0,.25); }
     .app.side-open main::after { content: ''; position: fixed; inset: 0; z-index: 9; background: rgba(0,0,0,.25); }
     .wrap { padding: 32px 16px 100px; } .saved { left: 16px; }
@@ -139,7 +170,7 @@
 <body>
 <div class="app" id="app">
   <aside>
-    <div class="brand"><span>글방</span></div>
+    <div class="brand"><button class="home-link" id="goHome" title="홈으로"><span>글방</span></button></div>
     <div class="side-list" id="sideList"></div>
     <div class="side-foot">
       <div class="sync-line" id="syncLine"></div>
@@ -199,12 +230,13 @@ function seed() {
       trashedAt: null, orderBy: 'writedAt', orderDir: 'desc', rank: 0, dateVisible: true }],
     posts: [{ id: 'welcome-post', storyId, title: '시작', text: '여기에 첫 글이 있습니다.\n\n이야기 목록(☰)에서 이야기를 고르고, "새 글 쓰기"를 눌러 글을 써 보세요.\n글을 두 번 누르면 수정할 수 있어요.',
       writedAt: now, editedAt: now, trashedAt: null, align: 'left', photos: [] }],
-    settings: { theme: 'light', fontSize: 17, countMode: 0 },
+    // D-day는 설정 안에 둔다: Mac(SQLite)·웹·백업 모두 설정을 통째로 저장하므로 따로 손대지 않아도 함께 보관된다
+    settings: { theme: 'light', fontSize: 17, countMode: 0, ddays: [] },
   };
 }
 
 // ---------- 상태 ----------
-const state = { view: 'story', storyId: null, postId: null, query: '' };
+const state = { view: 'home', storyId: null, postId: null, query: '' };
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmtDate = t => { const d = new Date(t); return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}. ${'일월화수목금토'[d.getDay()]}요일`; };
@@ -222,7 +254,7 @@ function postsOf(s) {
 // ---------- 사이드바 ----------
 function renderSide() {
   const stories = liveStories();
-  const item = s => `<button class="story-item ${s.id === state.storyId && state.view !== 'trash' && state.view !== 'search' ? 'active' : ''}" data-story="${s.id}">
+  const item = s => `<button class="story-item ${s.id === state.storyId && !['trash', 'search', 'home'].includes(state.view) ? 'active' : ''}" data-story="${s.id}">
       ${esc(s.title)}<small>글 ${postsOf(s).length}개</small></button>`;
   let html = stories.filter(s => !s.folderId).map(item).join('');
   for (const f of [...store.data.folders].sort((a, b) => a.rank - b.rank)) {
@@ -240,14 +272,16 @@ function render() {
   const fs = store.data.settings.fontSize;
   m.style.setProperty('--fs', fs + 'px');
 
+  rememberDepth();
   if (state.view === 'trash') return renderTrash(m);
   if (state.view === 'search') return renderSearch(m);
-  if (!s) { m.innerHTML = `<div class="wrap"><div class="empty">왼쪽에서 이야기를 선택하거나 새로 추가하세요.</div></div>`; return; }
+  if (state.view === 'home' || !s) { state.view = 'home'; return renderHome(m); }
 
   if (state.view === 'story') {
     const posts = postsOf(s);
     m.innerHTML = `
       <div class="toolbar">
+        <button class="tool" id="homeBtn">← 홈</button>
         <button class="tool" id="menuBtn">☰</button><span class="spacer"></span>
         <button class="tool" id="tSearch">검색</button>
         <button class="tool" id="tSort">${s.orderBy === 'title' ? '제목순' : '날짜순'} ${s.orderDir === 'asc' ? '↑' : '↓'}</button>
@@ -336,6 +370,115 @@ function render() {
     if (!p.text) $('#eTitle').focus(); else ta.focus();
   }
 }
+
+// ---------- 홈 화면 ----------
+const shortDate = t => { const d = new Date(t); return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`; };
+// 이야기의 가장 최근 글 (이야기의 정렬 설정과 상관없이 쓴 날짜 기준)
+const latestOf = s => store.data.posts.filter(p => p.storyId === s.id && !p.trashedAt).reduce((a, p) => (!a || p.writedAt > a.writedAt ? p : a), null);
+const firstLine = p => (p.text.split('\n').map(l => l.trim()).find(Boolean) || p.title || '').slice(0, 120);
+
+function renderHome(m) {
+  const stories = liveStories();
+  const card = s => {
+    const n = postsOf(s).length, last = latestOf(s);
+    return `<button class="story-card" data-story="${s.id}">
+      <h3>${esc(s.title)}</h3>
+      <span class="meta">글 ${n}개${last ? ` · 마지막 글 ${shortDate(last.writedAt)}` : ''}</span>
+      <p>${last ? esc(firstLine(last)) || '&nbsp;' : '아직 글이 없어요'}</p></button>`;
+  };
+  let list = `<div class="story-cards">${stories.filter(s => !s.folderId || !store.data.folders.some(f => f.id === s.folderId)).map(card).join('')}</div>`;
+  for (const f of [...store.data.folders].sort((a, b) => a.rank - b.rank)) {
+    const inside = stories.filter(s => s.folderId === f.id);
+    list += `<div class="home-folder">${esc(f.title)}</div>
+      <div class="story-cards">${inside.map(card).join('') || `<div class="story-card empty-folder">이 폴더는 비어 있어요</div>`}</div>`;
+  }
+  if (!stories.length) list = `<div class="empty">이야기가 없어요.\n아래 "＋ 이야기"로 첫 이야기를 만들어 보세요.</div>`;
+
+  m.innerHTML = `
+    <div class="toolbar">
+      <button class="tool" id="menuBtn">☰</button><span class="spacer"></span>
+      <button class="tool" id="tSearch">검색</button>
+    </div>
+    <div class="wrap home">
+      <h1 class="home-title">글방</h1>
+      <div class="home-sec"><h2>D-DAY</h2></div>
+      <div class="dday-row" id="ddayRow">${renderDdays()}</div>
+      <div class="home-sec"><h2>이야기</h2></div>
+      ${list}
+      <div class="home-foot">
+        <button class="tool" data-act="addStory">＋ 이야기</button>
+        <button class="tool" data-act="addFolder">＋ 폴더</button>
+        <button class="tool" data-act="trash">휴지통</button>
+        <button class="tool" data-act="settings">설정</button>
+        ${isWeb ? `<button class="tool" data-act="backup">백업 내보내기</button>
+        <button class="tool" data-act="restore">백업 불러오기</button>` : ''}
+      </div>
+    </div>`;
+}
+
+// ---------- D-day ----------
+const ddayList = () => (store.data.settings.ddays ??= []);
+const dayIndex = d => Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / DAY);
+const parseDay = s => { const [y, mo, d] = s.split('-').map(Number); return new Date(y, mo - 1, d); };
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+// 매년 반복이면 오늘 이후(오늘 포함) 가장 가까운 그날. 2월 29일은 평년에 2월 28일로
+function ddayTarget(x) {
+  const base = parseDay(x.date);
+  if (!x.yearly) return base;
+  const now = new Date();
+  const at = y => { const t = new Date(y, base.getMonth(), base.getDate()); if (t.getMonth() !== base.getMonth()) t.setDate(0); return t; };
+  const t = at(now.getFullYear());
+  return dayIndex(t) < dayIndex(now) ? at(now.getFullYear() + 1) : t;
+}
+function ddayInfo(x) {
+  const t = ddayTarget(x), diff = dayIndex(t) - dayIndex(new Date());
+  return { t, diff, label: diff === 0 ? 'D-Day' : diff > 0 ? `D-${diff.toLocaleString('ko-KR')}` : `D+${(-diff).toLocaleString('ko-KR')}` };
+}
+function renderDdays() {
+  // 다가오는 날(가까운 순) → 지난 날(최근 순)
+  const rows = ddayList().filter(x => x && x.date).map(x => ({ x, i: ddayInfo(x) }))
+    .sort((a, b) => (a.i.diff < 0) - (b.i.diff < 0) || (a.i.diff >= 0 ? a.i.diff - b.i.diff : b.i.diff - a.i.diff));
+  return rows.map(({ x, i }) => `<button class="dday ${i.diff === 0 ? 'today' : i.diff < 0 ? 'past' : ''}" data-dday="${x.id}" title="눌러서 고치기">
+      <span class="num">${i.label}</span><span class="name">${esc(x.name)}</span>
+      <small>${shortDate(i.t)} ${'일월화수목금토'[i.t.getDay()]}${x.yearly ? ' · 매년' : ''}</small></button>`).join('')
+    + `<button class="dday add" data-act="addDday">＋ D-day</button>`;
+}
+async function ddayDialog(x) {
+  const r = await ask({ title: x ? 'D-day 고치기' : '새 D-day', desc: '기다리는 날이나 기념일을 넣어 주세요.', ok: x ? '저장' : '추가', fields: [
+    { name: 'name', placeholder: '이름 (예: 결혼기념일)', value: x?.name || '' },
+    { name: 'date', type: 'date', label: '날짜', value: x?.date || todayStr() },
+    { name: 'yearly', options: [{ value: '0', label: '한 번만 세기' }, { value: '1', label: '매년 반복 (생일, 기념일)' }], value: x?.yearly ? '1' : '0' },
+    ...(x ? [{ name: 'action', options: [{ value: 'save', label: '저장' }, { value: 'delete', label: '이 D-day 지우기' }], value: 'save' }] : [])] });
+  if (!r) return;
+  if (r.action === 'delete') {
+    store.data.settings.ddays = ddayList().filter(d => d.id !== x.id);
+  } else {
+    if (!r.name.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(r.date)) return;
+    const v = { name: r.name.trim(), date: r.date, yearly: r.yearly === '1' };
+    if (x) Object.assign(x, v); else ddayList().push({ id: uid(), ...v });
+  }
+  store.save(); render();
+}
+// 자정이 지나면 숫자를 새로 센다 (앱을 켜 둔 채이거나, 다시 열었을 때)
+let shownDay = todayStr();
+function refreshDay() { if (todayStr() !== shownDay) { shownDay = todayStr(); if (state.view === 'home' && !$('#dlg').open) render(); } }
+setInterval(refreshDay, 60000);
+
+// ---------- 뒤로 가기 (안드로이드 뒤로 버튼, 브라우저 뒤로) ----------
+// 홈이 아닐 때 기록을 하나 쌓아 두고, 뒤로 가면 한 단계 위로 올라간다
+function rememberDepth() {
+  if (state.view !== 'home' && !history.state?.geulbang) { try { history.pushState({ geulbang: 1 }, ''); } catch {} }
+}
+function goUp() {
+  if ($('#dlg').open) { $('#dlg').close('cancel'); return rememberDepth(); }
+  if (lightboxOpen()) return rememberDepth();
+  $('#app').classList.remove('side-open');
+  if (state.view === 'edit') return finishEdit();
+  state.view = state.view === 'read' ? 'story' : 'home';
+  render();
+}
+const lightboxOpen = () => { const b = document.querySelector('.lightbox'); if (b) { b.remove(); return true; } return false; };
+window.addEventListener('popstate', () => { goUp(); });
 
 // ---------- 사진 ----------
 const photosOf = p => Array.isArray(p.photos) ? p.photos : [];
@@ -440,7 +583,7 @@ function ask({ title, desc = '', fields = [], ok = '확인', danger }) {
   form.innerHTML = `<h4>${title}</h4><p class="desc">${desc}</p>
     ${fields.map(f => f.options
       ? `<select name="${f.name}">${f.options.map(o => `<option value="${o.value}" ${o.value === f.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`
-      : `<input name="${f.name}" placeholder="${f.placeholder || ''}" value="${esc(f.value || '')}">`).join('')}
+      : `${f.label ? `<label class="field" for="dlg-${f.name}">${esc(f.label)}</label>` : ''}<input id="dlg-${f.name}" name="${f.name}" type="${f.type || 'text'}" placeholder="${f.placeholder || ''}" value="${esc(f.value || '')}">`).join('')}
     <div class="row"><button value="cancel" formnovalidate>취소</button><button value="ok" class="primary" ${danger ? 'style="background:#c0392b"' : ''}>${ok}</button></div>`;
   dlg.showModal();
   return new Promise(res => dlg.addEventListener('close', () => {
@@ -482,7 +625,7 @@ async function editStory() {
     { name: 'dateVisible', options: [{ value: '1', label: '글 날짜 표시' }, { value: '0', label: '글 날짜 숨기기' }], value: s.dateVisible ? '1' : '0' },
     { name: 'action', options: [{ value: 'save', label: '저장' }, { value: 'trash', label: '이 이야기를 휴지통으로' }], value: 'save' }] });
   if (!r) return;
-  if (r.action === 'trash') { s.trashedAt = Date.now(); state.storyId = liveStories()[0]?.id || null; }
+  if (r.action === 'trash') { s.trashedAt = Date.now(); state.storyId = liveStories()[0]?.id || null; state.view = 'home'; }
   else Object.assign(s, { title: r.title.trim() || s.title, subtitle: r.subtitle.trim(), folderId: r.folderId || null, dateVisible: r.dateVisible === '1' });
   store.save(); render();
 }
@@ -564,7 +707,19 @@ document.addEventListener('click', async e => {
   const d = t.dataset, s = story(state.storyId);
   if (t.id === 'addPhoto') { const p = post(state.postId); return addPhotos(p, await window.geulbang.pickPhotos()); }
   if (d.unphoto) { const p = post(state.postId); p.photos = photosOf(p).filter(x => x !== d.unphoto); store.save(); return renderPhotoStrip(p); }
-  if (d.story) { Object.assign(state, { view: 'story', storyId: d.story }); $('#app').classList.remove('side-open'); return render(); }
+  if (d.story) { Object.assign(state, { view: 'story', storyId: d.story }); $('#app').classList.remove('side-open'); m0(); return render(); }
+  if (d.dday) { const x = ddayList().find(v => v.id === d.dday); return x && ddayDialog(x); }
+  if (d.act) {
+    switch (d.act) {
+      case 'addDday': return ddayDialog(null);
+      case 'addStory': return addStory();
+      case 'addFolder': return addFolder();
+      case 'trash': state.view = 'trash'; m0(); return render();
+      case 'settings': return settings();
+      case 'backup': return backup();
+      case 'restore': return restore();
+    }
+  }
   if (d.post) { Object.assign(state, { view: 'read', postId: d.post }); return render(); }
   if (d.open) { const p = post(d.open); Object.assign(state, { view: 'read', postId: p.id, storyId: p.storyId }); return render(); }
   if (d.delfolder) {
@@ -578,7 +733,8 @@ document.addEventListener('click', async e => {
   switch (t.id) {
     case 'btnAddStory': return addStory();
     case 'btnAddFolder': return addFolder();
-    case 'btnTrash': state.view = 'trash'; return render();
+    case 'btnTrash': state.view = 'trash'; $('#app').classList.remove('side-open'); m0(); return render();
+    case 'goHome': case 'homeBtn': state.view = 'home'; $('#app').classList.remove('side-open'); m0(); return render();
     case 'btnSettings': $('#app').classList.remove('side-open'); return settings();
     case 'btnBackup': $('#app').classList.remove('side-open'); return backup();
     case 'btnRestore': $('#app').classList.remove('side-open'); return restore();
@@ -593,7 +749,8 @@ document.addEventListener('click', async e => {
     }
     case 'tStoryEdit': return editStory();
     case 'tExport': return exportStory();
-    case 'back': state.view = 'story'; return render();
+    // 글 읽기에서는 이야기로, 검색·휴지통에서는 홈으로
+    case 'back': state.view = state.view === 'read' ? 'story' : 'home'; m0(); return render();
     case 'tEdit': state.view = 'edit'; return render();
     case 'done': return finishEdit();
     case 'tPrint': return exportPDF();
@@ -617,7 +774,7 @@ document.addEventListener('dblclick', e => { if (state.view === 'read' && e.targ
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !$('#dlg').open) {
     if (state.view === 'edit') finishEdit();
-    else if (state.view !== 'story') { state.view = 'story'; render(); }
+    else if (state.view !== 'home') { state.view = state.view === 'read' ? 'story' : 'home'; m0(); render(); }
   }
 });
 
@@ -647,7 +804,9 @@ function saveNow() {
 }
 window.addEventListener('beforeunload', saveNow);
 window.addEventListener('pagehide', saveNow);
-document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); else refreshDay(); });
+// 화면을 옮길 때 맨 위부터 보이게
+function m0() { $('#main').scrollTop = 0; }
 // 모바일에서 열린 목록 바깥을 누르면 닫기
 $('#main').addEventListener('click', e => {
   if ($('#app').classList.contains('side-open') && !e.target.closest('#menuBtn')) $('#app').classList.remove('side-open');
@@ -660,6 +819,7 @@ window.geulbang.onSyncStatus(s => renderSyncLine(s));
   await store.load();
   applyTheme();
   state.storyId = liveStories()[0]?.id || null;
+  state.view = 'home';
   render();
   renderSyncLine(await window.geulbang.syncStatus());
 })();

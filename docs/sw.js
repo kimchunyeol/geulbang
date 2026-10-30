@@ -1,6 +1,6 @@
 // 오프라인에서도 홈 화면의 글방이 열리도록 앱 파일을 보관한다.
 // 글과 사진은 IndexedDB에 있으므로 여기서 다루지 않는다.
-const CACHE = 'geulbang-202610242315';
+const CACHE = 'geulbang-202610301446';
 const APP_FILES = ['./', 'index.html', 'web-bridge.js', 'manifest.webmanifest', 'icons/apple-touch-icon.png', 'icons/icon-192.png'];
 
 self.addEventListener('install', e => {
