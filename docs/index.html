@@ -178,8 +178,8 @@
       <button id="btnAddFolder">＋ 폴더</button>
       <button id="btnTrash">휴지통</button>
       <button id="btnSettings">설정</button>
-      <button id="btnBackup" class="web-only">백업 내보내기</button>
-      <button id="btnRestore" class="web-only">백업 불러오기</button>
+      <button id="btnBackup">백업 내보내기</button>
+      <button id="btnRestore">백업 불러오기</button>
     </div>
   </aside>
   <main id="main"></main>
@@ -410,8 +410,8 @@ function renderHome(m) {
         <button class="tool" data-act="addFolder">＋ 폴더</button>
         <button class="tool" data-act="trash">휴지통</button>
         <button class="tool" data-act="settings">설정</button>
-        ${isWeb ? `<button class="tool" data-act="backup">백업 내보내기</button>
-        <button class="tool" data-act="restore">백업 불러오기</button>` : ''}
+        <button class="tool" data-act="backup">백업 내보내기</button>
+        <button class="tool" data-act="restore">백업 불러오기</button>
       </div>
     </div>`;
 }
