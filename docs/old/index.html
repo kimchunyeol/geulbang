@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#12151c" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#fbf3f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1517" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="나의 글방">
@@ -17,34 +17,34 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
 <style>
-/* Layout: a shelf of notebooks (categories) → inside one, a narrow index of writings beside a lined page; phones step through shelf → list → page */
+/* Palette: dusty rose on blush cream, pastel notebook spines. Layout: a shelf of notebooks (categories) → inside one, a narrow index of writings beside a lined page; phones step through shelf → list → page */
 :root {
-  --paper: #f5f6f8;
+  --paper: #fbf3f1;
   --page: #ffffff;
-  --ink: #1d2433;
-  --ink-soft: #5b6475;
-  --line: #e2e6ee;
-  --rule: #d9e1f0;
-  --accent: #2f4fb3;
-  --accent-soft: #e8edfa;
+  --ink: #3a2a2e;
+  --ink-soft: #8a6f75;
+  --line: #f0dfe0;
+  --rule: #f3e2e4;
+  --accent: #b8506b;
+  --accent-soft: #fbe7ec;
   --danger: #b4372f;
-  --c1: #2f4fb3; --c2: #2f7a5f; --c3: #8a4a9c; --c4: #b0662a; --c5: #3b7f99; --c6: #a53d5b;
+  --c1: #c7607a; --c2: #d98c6a; --c3: #9a7ab8; --c4: #6fa58f; --c5: #d4a24c; --c6: #6d8fc4;
   --font-hand: "Nanum Pen Script", "Gowun Batang", cursive;
   --font-write: "Gowun Batang", "Noto Serif KR", serif;
   --font-ui: "IBM Plex Sans KR", system-ui, -apple-system, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #12151c; --page: #1a1e27; --ink: #e6e9f0; --ink-soft: #99a1b3;
-    --line: #2a303d; --rule: #262c3a; --accent: #8fa8f2; --accent-soft: #242c45; --danger: #f08a80;
-    --c1: #8fa8f2; --c2: #7cc4a6; --c3: #c79ad6; --c4: #e3a56f; --c5: #82c3db; --c6: #e590a8;
+    --paper: #1c1517; --page: #261d20; --ink: #f3e6e8; --ink-soft: #b59da3;
+    --line: #3a2c30; --rule: #33272b; --accent: #f29bb0; --accent-soft: #3d2830; --danger: #f08a80;
+    --c1: #f29bb0; --c2: #f0ae8e; --c3: #c4a6e0; --c4: #9fcfb9; --c5: #ecc77d; --c6: #9fb8e6;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --paper: #12151c; --page: #1a1e27; --ink: #e6e9f0; --ink-soft: #99a1b3;
-  --line: #2a303d; --rule: #262c3a; --accent: #8fa8f2; --accent-soft: #242c45; --danger: #f08a80;
-  --c1: #8fa8f2; --c2: #7cc4a6; --c3: #c79ad6; --c4: #e3a56f; --c5: #82c3db; --c6: #e590a8;
+  --paper: #1c1517; --page: #261d20; --ink: #f3e6e8; --ink-soft: #b59da3;
+    --line: #3a2c30; --rule: #33272b; --accent: #f29bb0; --accent-soft: #3d2830; --danger: #f08a80;
+    --c1: #f29bb0; --c2: #f0ae8e; --c3: #c4a6e0; --c4: #9fcfb9; --c5: #ecc77d; --c6: #9fb8e6;
   color-scheme: dark;
 }
 html, body { height: 100%; }
